@@ -20,10 +20,6 @@ ifeq (, $(shell which poetry))
 	$(error poetry command not found)
 endif
 
-# Run the install
-install:
-	@poetry install
-
 # Run all tests
 tests: install
-	@poetry run pytest --disable-warnings tests/
+	pytest --disable-warnings tests/
