@@ -8,7 +8,7 @@ HOST_ARCH := ${OS}_${ARCH}
 .ONESHELL: all requirements tests install
 .EXPORT_ALL_VARIABLES:
 
-all: requirements
+all: requirements install
 
 requirements:
 ifeq (, $(shell which python))
@@ -17,12 +17,12 @@ endif
 
 # install pip lib
 install:
-	pip install -r ./requirements.txt > /dev/null
+	pip install -r ./requirements.txt
 
 # Run all tests
-tests: install
+tests:
 	pytest --log-cli-level=INFO --disable-warnings -s tests/
 
 # Run all tests
-test: install
-	pytest --log-cli-level=INFO --disable-warnings tests/ -s -k $(tests)
+test:
+	pytest --log-cli-level=DEBUG --disable-warnings tests/ -s -k $(tests)
