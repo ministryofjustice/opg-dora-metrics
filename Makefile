@@ -10,16 +10,19 @@ HOST_ARCH := ${OS}_${ARCH}
 
 all: requirements
 
-
 requirements:
 ifeq (, $(shell which python))
 	$(error python command not found)
 endif
 
-ifeq (, $(shell which poetry))
-	$(error poetry command not found)
-endif
+# install pip lib
+install:
+	pip install -r ./requirements.txt > /dev/null
 
 # Run all tests
 tests: install
-	pytest --disable-warnings tests/
+	pytest --log-cli-level=INFO --disable-warnings -s tests/
+
+# Run all tests
+test: install
+	pytest --log-cli-level=INFO --disable-warnings tests/ -s -k $(tests)

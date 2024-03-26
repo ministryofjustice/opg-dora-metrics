@@ -1,10 +1,10 @@
-import unittest
 import pytest
 from timer.stopwatch import start, stop, duration, durations
 
 
 
-@pytest.mark.parametrize("test_start, test_stop, expected", [
+@pytest.mark.parametrize("test_start, test_stop, expected",
+[
     # same time
     ("2024-03-26T08:47:21.029473+00:00", "2024-03-26T08:47:21.029473+00:00", 0),
     # 20.7 seconds, so should get a rounded version to 21
