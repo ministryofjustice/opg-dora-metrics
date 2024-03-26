@@ -1,6 +1,4 @@
 SHELL := $(shell which bash)
-APPNAME := OPGGitHubActions
-
 OS := $(shell uname | tr '[:upper:]' '[:lower:]')
 ARCH := $(shell uname -m)
 HOST_ARCH := ${OS}_${ARCH}
@@ -22,7 +20,7 @@ ifeq (, $(shell which poetry))
 	$(error poetry command not found)
 endif
 
-
+# Run the install
 install:
 	@poetry install
 
