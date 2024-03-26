@@ -1,0 +1,26 @@
+name: "[Data] Test application code"
+
+on:
+  workflow_dispatch:
+  workflow_call:
+
+jobs:
+
+  # run the full test suite for this app
+  test_python:
+    name: "Python test suite"
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Checkout"
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 'pypy3.10'
+          cache: 'pip'
+      - run: make install
+      - name: "Running tests"
+        run: |
+          make tests
