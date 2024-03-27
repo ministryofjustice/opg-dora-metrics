@@ -25,4 +25,4 @@ tests:
 
 # Run all tests
 test:
-	pytest --log-cli-level=DEBUG --disable-warnings tests/ -s -k $(tests)
+	pytest --log-cli-level=DEBUG --disable-warnings tests/ -s -k $(names)
