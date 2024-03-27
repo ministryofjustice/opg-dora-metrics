@@ -37,7 +37,7 @@ def working_days_in_month(year:str, month:str) -> int:
     return weekday_count
 
 
-def year_month_range(start:date, end:date, flag:bool=False) -> dict:
+def year_month_range(start:date, end:date, as_merges:bool=False) -> dict:
     """Generate a dict of dicts with YYYY-mm keys, each of which have a dict with keys from status_options and a count set to 0"""
     d:dict = {}
     logging.debug(f"Generating dict between [{start}] and [{end}]")
@@ -45,8 +45,7 @@ def year_month_range(start:date, end:date, flag:bool=False) -> dict:
         for m in range (start.month, end.month):
             k = f'{y}-{m :02d}'
             d[k] = dict((key, 0) for key in status_options)
-            if flag:
-                d[k]['merge_based'] = True
+            d[k]['used_merges'] = as_merges
     return d
 
 
