@@ -1,13 +1,43 @@
 from github.WorkflowRun import WorkflowRun
 from github.Repository import Repository
 from datetime import date
+import calendar
 from gh.workflows import workflow_runs_by_name_fuzzy
 from pprint import pp
 import logging
 # known status options
-status_options:list[str] = ['queued', 'in_progress', 'completed', 'success', 'failure', 'neutral', 'cancelled', 'skipped', 'timed_out', 'action_required']
+status_options:list[str] = [
+    'completed', 'success', 'failure'
+]
 
-def year_month_range(start:date, end:date) -> dict:
+def stats(result:dict) -> dict:
+    # append average stats
+    for ym, stats in result.items():
+        y, m = map(str, ym.split('-'))
+        days = working_days_in_month(y, m)
+        success = stats['success'] if "success" in stats else 0
+        average = round(success / days, 2) if success > 0 else 0
+        result[ym]['weekdays'] = days
+        result[ym]['average_success_per_day'] = average
+    return result
+
+
+def working_days_in_month(year:str, month:str) -> int:
+    """Rough calculation for week days within a month. This does not account for bank holidays."""
+    y: int = int(year)
+    m: int = int(month)
+    weekday_count:int = 0
+    cal = calendar.Calendar()
+    for week in cal.monthdayscalendar(y, m ):
+        for i, day in enumerate(week):
+            # not this month's day or a weekend
+            if day == 0 or i >= 5:
+                continue
+            weekday_count += 1
+    return weekday_count
+
+
+def year_month_range(start:date, end:date, flag:bool=False) -> dict:
     """Generate a dict of dicts with YYYY-mm keys, each of which have a dict with keys from status_options and a count set to 0"""
     d:dict = {}
     logging.debug(f"Generating dict between [{start}] and [{end}]")
@@ -15,6 +45,8 @@ def year_month_range(start:date, end:date) -> dict:
         for m in range (start.month, end.month):
             k = f'{y}-{m :02d}'
             d[k] = dict((key, 0) for key in status_options)
+            if flag:
+                d[k]['merge_based'] = True
     return d
 
 
@@ -43,9 +75,14 @@ def workflow_runs_by_month_fuzzy(workflow_pattern:str, r:Repository, start:date,
     for run in runs:
         d = run.created_at.date()
         key = f'{d.year}-{d.month :02d}'
+        # handle missing keys in dict
         if key not in result:
             result[key] = dict((k, 0) for k in status_options)
 
+        if run.conclusion not in result[key]:
+            result[key][run.conclusion] = 0
+
         result[key][run.conclusion] = result[key][run.conclusion] + 1
 
-    return result
+
+    return stats(result)

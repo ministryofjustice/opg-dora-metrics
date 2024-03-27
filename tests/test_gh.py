@@ -4,12 +4,24 @@ from datetime import date
 from github import Github
 from github.Repository import Repository
 from gh.workflows import workflow_total_duration, workflow_runs, workflow_runs_by_name, workflow_runs_by_name_fuzzy
-from gh.frequency import workflow_runs_by_month_fuzzy
+from gh.frequency import workflow_runs_by_month_fuzzy,working_days_in_month
 from gh.auth import init
 from gh.team import repositories_and_workflows
 from gh.merges import merges_to_branch
 
 from pprint import pp
+
+
+@pytest.mark.parametrize("year, month, expected",
+[
+    ("2023", "02", 20),
+    ("2023", "12", 21),
+    ("2024", "01", 23),
+    ("2024", "02", 21),
+])
+def test_working_days_in_month(year:str, month:str, expected:int):
+    assert working_days_in_month(year, month) == expected
+
 ###### THESE TESTS CALL REAL API END POINTS! ######
 
 # test durations match known values
@@ -112,7 +124,7 @@ def test_team_repositories(org:str, team:str, expected_count:int):
     ("ministryofjustice/serve-opg", date(2024, 1, 1), date(2024, 3, 1), "main", "2024-02", 5, 0),
 ])
 def test_merges_to_branch(repo:str, start:date, end:date, branch:str, key:str, success:int, failure:int):
-    """"""
+    """Test how many merges are found for this repo"""
     g:Github = Github()
     r:Repository = g.get_repo(repo)
     res = merges_to_branch(r, start, end, branch)

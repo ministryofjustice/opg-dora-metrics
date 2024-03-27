@@ -1,7 +1,7 @@
 import logging
 from github.Repository import Repository
 from datetime import date,datetime,timezone
-from gh.frequency import year_month_range, status_options
+from gh.frequency import year_month_range, status_options, stats
 
 def merged_date_valid(merged_at:date, start:datetime, end:datetime):
     """See if the merged_date is between start & end and not None """
@@ -22,7 +22,7 @@ def merges_to_branch(r:Repository, start_date:date, end_date:date, branch:str):
     pull_requests = r.get_pulls(state='closed', sort='merged_at', direction='desc', base=branch)
     i:int = 0
     t:int = pull_requests.totalCount
-    result:dict = year_month_range(start, end)
+    result:dict = year_month_range(start, end, True)
 
     logging.debug(f"[{r.full_name}] found [{t}] total pull requests")
     for pr in pull_requests:
@@ -37,6 +37,6 @@ def merges_to_branch(r:Repository, start_date:date, end_date:date, branch:str):
             result[key]['success'] = result[key]['success'] + 1
         # exit the func early if the date is now before the start date
         elif pr.merged_at is not None and pr.merged_at < start:
-            return result
+            return stats(result)
 
-    return result
+    return stats(result)
