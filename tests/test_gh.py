@@ -1,11 +1,15 @@
+import os
 import pytest
+from datetime import date
 from github import Github
 from github.Repository import Repository
+from gh.workflows import workflow_total_duration, workflow_runs, workflow_runs_by_name, workflow_runs_by_name_fuzzy
+from gh.frequency import workflow_runs_by_month_fuzzy
+from gh.auth import init
+from gh.team import repositories_and_workflows
+from gh.merges import merges_to_branch
 
 from pprint import pp
-from gh.workflows import workflow_total_duration, workflow_runs, workflow_runs_by_name, workflow_runs_by_name_fuzzy
-
-
 ###### THESE TESTS CALL REAL API END POINTS! ######
 
 # test durations match known values
@@ -61,3 +65,56 @@ def test_workflow_runs_by_name_fuzzy(test_repo:str, test_dates:str, workflow_nam
     r:Repository = g.get_repo(test_repo)
     w = workflow_runs_by_name_fuzzy(workflow_name, r, test_dates, "main")
     assert len(w) == expected_count
+
+
+# test number of workflow runs for regex match (eg path to live testing)
+@pytest.mark.parametrize("test_repo, test_dates, workflow_name, status, expected_count",
+[
+    # ("ministryofjustice/opg-lpa", "2024-02-01..2024-03-01", " live","success", 15),
+    ("ministryofjustice/serve-opg", "2024-02-01..2024-03-01", " live$", "success", 3),
+])
+def test_workflow_runs_by_name_fuzzy_and_status(test_repo:str, test_dates:str, workflow_name:str, status:str, expected_count:int):
+    """Test number of successful workflow runs for specifc workflows (eg path to live testing)"""
+    g:Github = Github()
+    r:Repository = g.get_repo(test_repo)
+    w = workflow_runs_by_name_fuzzy(workflow_name, r, test_dates, "main", status)
+    assert len(w) == expected_count
+
+
+@pytest.mark.parametrize("test_repo, pattern, start, end, key, success, failure",
+[
+    ("ministryofjustice/serve-opg", " live$", date(2024, 2, 1), date(2024, 3, 1), "2024-02", 3, 2 ),
+])
+def test_workflow_runs_by_month_fuzzy(test_repo:str, pattern:str, start:date, end:date, key:str, success:int, failure:int):
+    """Check that we find correct number of success and failures for the month"""
+    g:Github = Github()
+    r:Repository = g.get_repo(test_repo)
+    res:dict = workflow_runs_by_month_fuzzy(pattern, r, start, end)
+    assert res[key]['success'] == success
+    assert res[key]['failure'] == failure
+
+
+@pytest.mark.parametrize("org, team, expected_count",
+[
+    ("ministryofjustice", "opg", 111),
+])
+@pytest.mark.skipif(os.environ.get("GH_TOKEN", 0) == 0, reason="Github token env var (GH_TOKEN) not present")
+def test_team_repositories(org:str, team:str, expected_count:int):
+    """Make sure we find the at least the expected number of repos"""
+    token = os.environ.get("GH_TOKEN", 0)
+    _, _, t = init(token, org, team)
+    res = repositories_and_workflows(t)
+    assert len(res) >= expected_count
+
+
+@pytest.mark.parametrize("repo, start, end, branch, key, success, failure",
+[
+    ("ministryofjustice/serve-opg", date(2024, 1, 1), date(2024, 3, 1), "main", "2024-02", 5, 0),
+])
+def test_merges_to_branch(repo:str, start:date, end:date, branch:str, key:str, success:int, failure:int):
+    """"""
+    g:Github = Github()
+    r:Repository = g.get_repo(repo)
+    res = merges_to_branch(r, start, end, branch)
+    assert res[key]['success'] == success
+    assert res[key]['failure'] == failure

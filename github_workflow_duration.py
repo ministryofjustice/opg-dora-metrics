@@ -1,5 +1,6 @@
 import argparse
 import os
+import logging
 from gh.auth import init
 from gh.workflows import workflow_total_durations
 from github import Github
@@ -8,6 +9,7 @@ from github.Repository import Repository
 
 
 def main() :
+    logging.basicConfig(level=os.environ.get('LOGLEVEL', 'INFO').upper())
     # handle args
     parser = argparse.ArgumentParser()
     parser.add_argument("--repository", help="Full name of the repository, including owner", required=True, type=str)
