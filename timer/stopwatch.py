@@ -30,10 +30,8 @@ def duration(start: str, stop: str) -> int:
     Returns:
     int: Rounded number of seconds between the timestamps
     """
-    start_ts = datetime.fromisoformat(start)
-    stop_ts = datetime.fromisoformat(stop)
-    diff = stop_ts - start_ts
-    seconds = diff / timedelta(seconds=1)
+    data:dict = durations(start, stop)
+    seconds = data.get('seconds', 0.0)
     return round(seconds)
 
 def durations(start: str, stop: str) -> dict:

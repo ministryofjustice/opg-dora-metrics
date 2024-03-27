@@ -1,3 +1,4 @@
+import os
 import argparse
 from timer.stopwatch import start, stop, durations
 
