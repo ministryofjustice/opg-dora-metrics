@@ -37,7 +37,7 @@ class GithubRepository:
     ##### Pull request / merge related #####
 
 
-    def pull_requests_in_date_range(
+    def pull_requests(
             self,
             branch:str,
             start:date,
@@ -47,41 +47,22 @@ class GithubRepository:
 
         """
         logging.info(f"[{self.name()}] pull_requests between [{start}..{end}] for [{branch}] in state [{state}]")
-        t:int = 0
-        in_range: list[Simple] = []
-        all: list[Simple] = []
-        t, all = self.pull_requests(branch, state)
-        for i, pr in enumerate(all):
-            if between(start, end):
-                logging.debug(f"[{self.name()}] [{i+1}/{t}] PR for [{branch}]@[{pr.merged_at}] in range ✅")
-                in_range.append(pr)
-            else:
-                logging.debug(f"[{self.name()}] [{i+1}/{t}] PR for [{branch}]@[{pr.merged_at}] not in range ❌")
-        return t, in_range, all
-
-    def pull_requests(self, branch:str, state:str = 'closed') -> tuple[int, list[Simple]]:
-        """Fetch the total number of pull requests and a list of simplified data for reporting uses
-
-        Get all pull requests for the repository that have a state matching passed value and generate a
-        list of core information that we use
-
-        Parameters:
-        branch (str):   Branch name that pull_request used for base
-        state (str):    State of the pull request needs to be in (default: closed)
-
-
-        """
-        logging.info(f"[{self.name()}] pull_requests for [{branch}] in state [{state}]")
-        prs:PaginatedList[PullRequest] = self.r.get_pulls(base=branch, state=state, sort='merged_at', direction='desc')
-        simple:list[Simple] = []
         fields:list[str] = ['title', 'merged_at', 'state']
 
-        t:int = prs.totalCount
+        prs:PaginatedList[PullRequest] = self.r.get_pulls(base=branch, state=state, sort='merged_at', direction='desc')
+        all:list[Simple] = []
+        in_range: list[Simple] = []
+
+        total:int = prs.totalCount
         pr:PullRequest = None
         for i, pr in enumerate(prs):
-            logging.debug(f"[{self.name()}] [{i+1}/{t}] PR for [{branch}]@[{pr.merged_at}]")
-            simple.append(Simple.instance(pr, fields))
-        return t, simple
+            all.append(Simple.instance(pr, fields))
+            if between(start, end):
+                logging.debug(f"[{self.name()}] [{i+1}/{total}] PR for [{branch}]@[{pr.merged_at}] in range ✅")
+                in_range.append(pr)
+            else:
+                logging.debug(f"[{self.name()}] [{i+1}/{total}] PR for [{branch}]@[{pr.merged_at}] not in range ❌")
+        return total, in_range, all
 
 
     ##### Workflow frequency related #####

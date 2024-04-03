@@ -16,7 +16,7 @@ def main() :
     parser.add_argument("--workflow", help="Workflow id to calculate the duration of", required=True, type=int)
     args = parser.parse_args()
     # setup auth
-    token = str( os.environ.get("GH_TOKEN", "" ))
+    token = str( os.environ.get("GITHUB_ACCESS_TOKEN", "" ))
     g:Github
     g, _, _ = init(token)
     # find the repo

@@ -44,13 +44,13 @@ def test_models_GithubRepository_aggregated_workflow_runs_success(
 
 # ################################################
 # # REQUIRE GITHUB API CALLS TO BE MADE
-# # Will be skipped if GH_TOKEN env var is not set
+# # Will be skipped if GITHUB_ACCESS_TOKEN env var is not set
 # ################################################
 @pytest.mark.parametrize("slug",
 [
     ("ministryofjustice/serve-opg")
 ])
-@pytest.mark.skipif(os.environ.get("GH_TOKEN", 0) == 0, reason="Requires real api calls, Github token env var (GH_TOKEN) not present")
+@pytest.mark.skipif(os.environ.get("GITHUB_ACCESS_TOKEN", 0) == 0, reason="Requires real api calls, Github token env var (GITHUB_ACCESS_TOKEN) not present")
 def test_models_GithubRepository_init_success(slug:str):
     """Test that the class inits and the slugs / names all match"""
     g:Github = Github()
@@ -63,7 +63,7 @@ def test_models_GithubRepository_init_success(slug:str):
 [
     ("ministryofjustice/serve-opg", " live", date(year=2024, month=2, day=1), date(year=2024, month=3, day=1), 5, 3),
 ])
-@pytest.mark.skipif(os.environ.get("GH_TOKEN", 0) == 0, reason="Requires real api calls, Github token env var (GH_TOKEN) not present")
+@pytest.mark.skipif(os.environ.get("GITHUB_ACCESS_TOKEN", 0) == 0, reason="Requires real api calls, Github token env var (GITHUB_ACCESS_TOKEN) not present")
 def test_models_GithubRepository_workflow_runs_success(slug:str, workflow:str, start:date, end:date, total:int, success:int):
     """Test the simple workflow runs are return in a matching way"""
     g:Github = Github()
@@ -74,18 +74,26 @@ def test_models_GithubRepository_workflow_runs_success(slug:str, workflow:str, s
     assert len(runs) == total
     assert len(good) == success
 
-@pytest.mark.parametrize("slug, branch, expected",
+@pytest.mark.parametrize("slug, branch, start, end, total, inrange",
 [
-    ("ministryofjustice/serve-opg", "main", 128)
+    (
+        "ministryofjustice/serve-opg",
+        "main",
+        date(year=2024, month=2, day=1),
+        date(year=2024, month=3, day=1),
+        128,
+        5
+    )
 ])
-@pytest.mark.skipif(os.environ.get("GH_TOKEN", 0) == 0, reason="Requires real api calls, Github token env var (GH_TOKEN) not present")
-def test_models_GithubRepository_pull_requests(slug:str, branch:str, expected:int):
+@pytest.mark.skipif(os.environ.get("GITHUB_ACCESS_TOKEN", 0) == 0, reason="Requires real api calls, Github token env var (GITHUB_ACCESS_TOKEN) not present")
+def test_models_GithubRepository_pull_requests(slug:str, branch:str, start:date, end:date, total:int, inrange:int):
     """Test that the class inits and the slugs / names all match"""
     g:Github = Github()
     repo = GithubRepository(g, slug)
-    total, res = repo.pull_requests(branch)
-    first = res[0]
+    t, in_range, all = repo.pull_requests(branch, start, end)
+    first = all[0]
 
-    assert total == expected
-    assert len(res) == expected
+    assert t == total
+    assert len(all) == total
+    assert len(in_range) == inrange
     assert isinstance(first.get('_type'), PullRequest) == True

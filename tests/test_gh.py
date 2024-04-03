@@ -110,10 +110,10 @@ def test_workflow_runs_by_month_fuzzy(test_repo:str, pattern:str, start:date, en
 [
     ("ministryofjustice", "opg", 111),
 ])
-@pytest.mark.skipif(os.environ.get("GH_TOKEN", 0) == 0, reason="Github token env var (GH_TOKEN) not present")
+@pytest.mark.skipif(os.environ.get("GITHUB_ACCESS_TOKEN", 0) == 0, reason="Github token env var (GITHUB_ACCESS_TOKEN) not present")
 def test_team_repositories(org:str, team:str, expected_count:int):
     """Make sure we find the at least the expected number of repos"""
-    token = os.environ.get("GH_TOKEN", 0)
+    token = os.environ.get("GITHUB_ACCESS_TOKEN", 0)
     _, _, t = init(token, org, team)
     res = repositories_and_workflows(t)
     assert len(res) >= expected_count

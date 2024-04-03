@@ -66,7 +66,7 @@ def main() :
     args = parser.parse_args()
     outputfile = args.o
     # setup auth
-    token = str( os.environ.get("GH_TOKEN", "" ))
+    token = str( os.environ.get("GITHUB_ACCESS_TOKEN", "" ))
     g:Github
 
     repo_and_workflows:list = []
