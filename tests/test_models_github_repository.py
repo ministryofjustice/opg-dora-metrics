@@ -14,23 +14,23 @@ from pprint import pp
 [
     ("ministryofjustice/serve-opg",
      [
-         Simple(name="1", conclusion='failure', created_at=datetime(year=2024, month=1, day=10, hour=13, minute=1, second=1)),
-         Simple(name="2", conclusion='success', created_at=datetime(year=2024, month=1, day=10, hour=13, minute=30, second=1)),
-         Simple(name="3", conclusion='success', created_at=datetime(year=2024, month=2, day=18, hour=13, minute=30, second=1)),
-         Simple(name="4", conclusion='success', created_at=datetime(year=2024, month=2, day=29, hour=13, minute=30, second=1)),
-         Simple(name="excluded-by-date", conclusion='success', created_at=datetime(year=2024, month=3, day=2, hour=13, minute=30, second=1)),
+         Simple(name="1", conclusion='failure', date=datetime(year=2024, month=1, day=10, hour=13, minute=1, second=1)),
+         Simple(name="2", conclusion='success', date=datetime(year=2024, month=1, day=10, hour=13, minute=30, second=1)),
+         Simple(name="3", conclusion='success', date=datetime(year=2024, month=2, day=18, hour=13, minute=30, second=1)),
+         Simple(name="4", conclusion='success', date=datetime(year=2024, month=2, day=29, hour=13, minute=30, second=1)),
+         Simple(name="excluded-by-date", conclusion='success', date=datetime(year=2024, month=3, day=2, hour=13, minute=30, second=1)),
      ],
      date(year=2024, month=1, day=1),
      date(year=2024, month=3, day=1),
      4,
      3),
 ])
-def test_models_GithubRepository_aggregated_workflow_runs_success(
+def test_models_GithubRepository_aggregated_success(
     slug:str, runs:list[Simple], start:date, end:date, total:int, success:int):
     """Check that aggregated workflow groups and creates totals correctly"""
     g:Github = Github()
     repo = GithubRepository(g, slug)
-    agg = repo.aggregated_workflow_runs(runs, start, end)
+    agg = repo.aggregated_by_date(runs, start, end)
 
     t: int = 0
     s: int = 0

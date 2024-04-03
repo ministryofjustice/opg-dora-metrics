@@ -21,7 +21,7 @@ class TestSimpleClass:
     ({'name': "test", 'address': {'line1':'test nested'}}, 'name', 'test', str),
     ({'name': "test", 'address': {'line1':'test nested'}}, 'address', {'line1':'test nested'}, dict),
 ])
-def test_models_Simple_get_set(simple_data:dict, test_property:str, expected:Any, expected_t:Any):
+def test_models_Simple_get_set_del(simple_data:dict, test_property:str, expected:Any, expected_t:Any):
     """Test the Simple class is created and properties are accessible, match values and their expected types"""
     s = Simple(**simple_data)
     assert s.get(test_property) == expected
@@ -30,6 +30,11 @@ def test_models_Simple_get_set(simple_data:dict, test_property:str, expected:Any
     s.set(test_property, 'other')
     assert s.get(test_property) != expected
     assert s.get(test_property) == 'other'
+    # test the delete
+    # same as s.delete(test_property)
+    del s[test_property]
+    assert s.get(test_property) == None
+
 
 
 @pytest.mark.parametrize("data, keys, test_property, expected, expected_t",

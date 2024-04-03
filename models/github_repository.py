@@ -34,8 +34,26 @@ class GithubRepository:
         return self.r.full_name
 
 
-    ##### Pull request / merge related #####
+    ##### Main metrics #####
 
+    def deployment_frequency(
+            self,
+            branch:str,
+            start:date,
+            end:date,
+            path_to_live_pattern:str = " live"
+    ):
+        """"""
+
+        runs:list[Simple] = self.workflow_runs(path_to_live_pattern, branch, start, end)
+        # no runs found, use pull requests merges as proxy measure
+        if len(runs) == 0:
+            logging.warning(f"[{self.name()}] [branch:{branch}] [workflow:{path_to_live_pattern}] not found, using merge counter as proxy")
+            runs = self.pull_requests(branch, start, end)
+
+        aggregated:dict[str, Simple] = self.aggregated_by_date(runs, start, end)
+
+    ##### Pull request / merge related #####
 
     def pull_requests(
             self,
@@ -56,7 +74,11 @@ class GithubRepository:
         total:int = prs.totalCount
         pr:PullRequest = None
         for i, pr in enumerate(prs):
-            all.append(Simple.instance(pr, fields))
+            s:Simple = Simple.instance(pr, fields)
+            s.set('date', s.get('merged_at'))
+            del s.merged_at
+
+            all.append(s)
             if between(start, end):
                 logging.debug(f"[{self.name()}] [{i+1}/{total}] PR for [{branch}]@[{pr.merged_at}] in range ✅")
                 in_range.append(pr)
@@ -67,7 +89,7 @@ class GithubRepository:
 
     ##### Workflow frequency related #####
 
-    def aggregated_workflow_runs(self, runs:list[Simple], start:date, end:date) -> dict[str, Simple]:
+    def aggregated_by_date(self, runs:list[Simple], start:date, end:date) -> dict[str, Simple]:
         """Return a dict of workflow run counters grouped by YYYY-MM of the created_at date.
 
         Creates a list of valid months (YYYY-MM) between start & end values and generates an initial empty
@@ -75,8 +97,6 @@ class GithubRepository:
 
         Then iterates over the runs passed and creates an aggregated counter for each month based on
         the workflow conclusion
-
-        Adds averages for each month
 
         Parameters:
 
@@ -91,7 +111,7 @@ class GithubRepository:
         keys = year_month_list(start, end)
         # pre-populate the list
         aggregated:dict[str, dict] = {year_month: {} for year_month in keys}
-        gFunc = lambda x : x.get('created_at').strftime('%Y-%m')
+        gFunc = lambda x : x.get('date').strftime('%Y-%m')
         # group by a field, and setup totals
         grouped:dict[str, list[Simple]] = GroupBy('conclusion', runs, groupByFunc=gFunc )
         totals:dict[str, Simple] = Totals('conclusion', grouped)
@@ -103,7 +123,7 @@ class GithubRepository:
 
 
     def workflow_runs(self, pattern:str, branch:str, start: date, end:date) -> list[Simple]:
-        """Return a list of Simple objects using only ['name', 'conclusion', 'created_at']
+        """Return a list of Simple objects using only ['name', 'conclusion', 'date']
 
         Iterates over the result from repository.get_workflow_runs() and only returns those values
         that match the string pattern passed (using re.search).
@@ -124,8 +144,13 @@ class GithubRepository:
         for workflow in all:
             if re.search(pattern, workflow.name.lower()):
                 logging.debug(f"[{self.name()}] [workflow:{workflow.name}] matches [{pattern}] ✅")
-                # use the reduced version
-                found.append( Simple.instance(workflow, fields) )
+                # use the reduced version and standardise date field to be 'date'
+                s:Simple = Simple.instance(workflow, fields)
+                s.set('date', s.get('created_at'))
+                del s.created_at
+                found.append(s)
             else:
                 logging.debug(f"[{self.name()}] [workflow:{workflow.name}] does not match [{pattern}] ❌")
+
+        logging.info(f"[{self.name()}] found [{len(found)}] workflow_runs matching [{pattern}] on [{branch}] between [{start}..{end}]")
         return found

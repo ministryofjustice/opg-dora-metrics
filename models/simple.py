@@ -28,6 +28,12 @@ class Simple:
     def __getattr__(self, name:str) -> Any|None:
         return self.get(name)
 
+    def __delattr__(self, name:str) -> None:
+       self.delete(name)
+
+    def __delitem__(self, name:str) -> None:
+        self.delete(name)
+
     def get(self, key:str) -> Any|None:
         """Return the value present at Key, default to None"""
         return self._properties.get(key, None)
@@ -37,6 +43,8 @@ class Simple:
         self._properties.setdefault(key, value)
         self._properties[key] = value
 
+    def delete(self, key:str) -> None:
+        self._properties.pop(key)
 
     @staticmethod
     def instance(source:Any, properties:list) -> Self:
