@@ -2,13 +2,14 @@ from typing import TypeVar, Callable, Any
 
 from log.logger import logging
 from models.item import Item
+from utils.decorator import timer
 
 from pprint import pp
 
 # source type
 T = TypeVar('T', Item, dict)
 
-
+@timer
 def averages(
         totals: dict[str, T],
         averaging_function:Callable[[str, Any], Any],
@@ -16,7 +17,6 @@ def averages(
         merge:bool = True
         ) -> dict[str, Item]:
     """"""
-    logging.debug('start')
 
     result:dict[str, Item] = {}
 
@@ -36,5 +36,4 @@ def averages(
 
         result[key] = Item(data=avgs)
 
-    logging.debug('end')
     return result

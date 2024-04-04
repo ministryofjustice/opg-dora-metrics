@@ -1,7 +1,7 @@
-import sys
 import json
 from typing import TypeVar
 from log.logger import logging
+from utils.decorator import timer
 
 # type of the source object, could be dict, a class etc
 T = TypeVar('T')
@@ -15,17 +15,16 @@ class Item:
     _fields: list[str] = []
     _type: type = None
 
+    @timer
     def __init__(self, data:T, filter:list[str] = None) -> None:
-        logging.debug('start')
         self._fields = []
         self._type = type(data)
         logging.info('type of data converting to Item', type=self._type)
         self.__setup__(data, filter)
-        logging.debug('end')
 
+    @timer
     def __setup__(self, data:T, filter:list[str] = None) -> None:
         """Use the data and filters passed to setup this item to contain correct attributes based on the source"""
-        logging.debug('start')
         items = data.__dict__.items() if type(data) is not dict else data.items()
         for key, v in items:
             logging.debug('getting property', property=key)
@@ -49,8 +48,6 @@ class Item:
                 self._fields.append(key[1:])
                 self.__setattr__(key[1:], value)
 
-        logging.debug('end')
-
     ##############
     # display related
     ##############
@@ -66,6 +63,7 @@ class Item:
     ##############
     # public get / set / delete versions
     ##############
+    @timer
     def get(self, name:str) -> V | None:
         try:
             return  self.__getattribute__(name)
@@ -73,15 +71,19 @@ class Item:
             logging.warn('failed to get value for property', property=name)
             return None
 
+    @timer
     def set(self, name:str, value: V) -> None:
         self.__setattr__(name, value)
 
+    @timer
     def delete(self, name:str) -> None:
         self.__delattr__(name)
 
+    @timer
     def dict(self) -> dict[str, V]:
         return self.__dict__()
 
+    @timer
     def rename(self, old:str, new:str) -> None:
         logging.info('renaming property', old=old, new=new)
         self.set(new, self.get(old))

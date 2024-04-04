@@ -1,21 +1,19 @@
 from datetime import date, datetime, timezone
 import calendar
 from log.logger import logging
+from utils.decorator import timer
 
-
+@timer
 def str_to_date(value:str, fmt:str = '%Y-%m') -> date:
-    """"""
-    logging.debug('start')
+    """Convert the date represented in value to a date using the format and timezone passed"""
     result:date = datetime.strptime(value, fmt).date()
     logging.debug('converting string to date', original=value, converted=result)
-    logging.debug('end')
 
     return result
 
+@timer
 def weekdays_in_month(period:date) -> int:
-    """"""
-    logging.debug('start')
-    logging.info('getting count fo weekdays for month', month=period)
+    """Find the number of weekdays (as a proxy measure for working days) for the month provided"""
     count:int = 0
     cal = calendar.Calendar()
     for week in cal.monthdayscalendar(period.year, period.month):
@@ -24,7 +22,6 @@ def weekdays_in_month(period:date) -> int:
                 continue
             count += 1
     logging.info('getting count fo weekdays for month', month=period, count=count)
-    logging.debug('end')
     return count
 
 

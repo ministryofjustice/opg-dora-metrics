@@ -2,11 +2,11 @@ from typing import TypeVar
 
 from log.logger import logging
 from models.item import Item
-
+from utils.decorator import timer
 # source type
 T = TypeVar('T', Item, dict)
 
-
+@timer
 def totals(grouped: dict[str, list[T]], total_vary_by:str = None) -> dict[str, Item]:
     """Generate a series of totals for the grouped information passed.
 
@@ -16,7 +16,6 @@ def totals(grouped: dict[str, list[T]], total_vary_by:str = None) -> dict[str, I
         returned:
             `{'2024-01': {'total':2, 'total_y': 1, 'total_n':1 } }`
     """
-    logging.debug('start')
 
     totals:dict[str] = {}
 
@@ -37,5 +36,4 @@ def totals(grouped: dict[str, list[T]], total_vary_by:str = None) -> dict[str, I
                 logging.debug('count for each value of field', key=key, field=total_vary_by, variant=total_key)
 
     result:dict[str, Item] = {k: Item(values) for k, values in totals.items()}
-    logging.debug('end')
     return result
