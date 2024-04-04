@@ -1,7 +1,12 @@
 import structlog
+import os
+import logging
 from structlog.processors import CallsiteParameter
 
+lvl = os.environ.get('LOG_LEVEL', 'INFO')
+
 structlog.configure(
+    wrapper_class = structlog.make_filtering_bound_logger( logging.getLevelNamesMapping()[lvl] ),
     processors=[
         structlog.processors.TimeStamper(fmt="%Y-%m-%d %H:%M.%S"),
         structlog.contextvars.merge_contextvars,

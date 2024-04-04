@@ -17,14 +17,16 @@ class Item:
 
     @timer
     def __init__(self, data:T, filter:list[str] = None) -> None:
-        self._fields = []
-        self._type = type(data)
         logging.info('type of data converting to Item', type=self._type)
+        self._fields = []
         self.__setup__(data, filter)
 
     @timer
     def __setup__(self, data:T, filter:list[str] = None) -> None:
         """Use the data and filters passed to setup this item to contain correct attributes based on the source"""
+        self._fields = []
+        self._type = type(data)
+
         items = data.__dict__.items() if type(data) is not dict else data.items()
         for key, v in items:
             logging.debug('getting property', property=key)
@@ -85,6 +87,10 @@ class Item:
 
     @timer
     def rename(self, old:str, new:str) -> None:
-        logging.info('renaming property', old=old, new=new)
-        self.set(new, self.get(old))
-        self.delete(old)
+        value = self.get(old)
+        logging.info('renaming property', old=old, new=new, val=value)
+
+        self.set(new, value)
+        self._fields.remove(old)
+
+        del self[old]

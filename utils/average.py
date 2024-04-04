@@ -16,7 +16,7 @@ def averages(
         prefix:str = 'total',
         merge:bool = True
         ) -> dict[str, Item]:
-    """"""
+    """Takes a dict containing total data and works out the averages using the function passed in"""
 
     result:dict[str, Item] = {}
 
