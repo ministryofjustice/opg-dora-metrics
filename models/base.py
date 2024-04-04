@@ -7,6 +7,13 @@ class DictionaryGetterSetter:
     """Generic model"""
     _data: dict[str, Any] = {}
 
+    def __init__(self) -> None:
+        self.reset()
+
+    @classmethod
+    def reset(cls) -> None:
+        cls._data = {}
+
     ##############
     # Generic property getters / setters / deletes
     # that will use data as a store instead
@@ -46,3 +53,7 @@ class DictionaryGetterSetter:
 
     def dict(self) -> dict[str, Any]:
         return self.__dict__()
+
+    def rename(self, old:str, new:str) -> None:
+        self.set(new, self.get(old))
+        self.delete(old)

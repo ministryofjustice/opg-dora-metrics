@@ -6,9 +6,12 @@ from pprint import pp
 
 class Item(DictionaryGetterSetter):
     """Simple container item to hold key data from other classes to reduce complexity latest"""
+    _data: dict[str, Any] = {}
 
     def __init__(self, data:Any, filter:list[str] = None) -> None:
         """"""
+        super().__init__()
+
         items = data.__dict__.items() if type(data) is not dict else data.items()
         for key, v in items:
             # check if its a standard type
