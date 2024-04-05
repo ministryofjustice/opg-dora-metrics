@@ -11,7 +11,7 @@ from github.PullRequest import PullRequest
 from github.WorkflowRun import WorkflowRun
 from github.Repository import Repository
 
-from models.github_repository import GithubRepository, KeepWorkflowRunFields, KeepPullRequestFields
+from models.github_repository import GithubRepository
 from models.item import Item
 from models.keep import attrs, specs
 from log.logger import logging

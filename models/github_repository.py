@@ -15,31 +15,6 @@ from log.logger import logging
 from utils.decorator import timer
 from utils.dates import between
 from pprint import pp
-from enum import Enum
-
-
-
-
-class KeepWorkflowRunFields(Enum):
-    Id = 'id'
-    Name = 'name'
-    CreatedAt = 'created_at'
-    Conclusion = 'conclusion'
-
-    @classmethod
-    def strings(cls) -> list[str]:
-        return [e.value for e in cls]
-
-class KeepPullRequestFields(Enum):
-    Id = 'id'
-    Title = 'title'
-    MergedAt = 'merged_at'
-    State = 'state'
-
-    @classmethod
-    def strings(cls) -> list[str]:
-        return [e.value for e in cls]
-
 
 class GithubRepository:
     """GithubRepository provides a series of methods that wrap and process calls using the github sdk.
