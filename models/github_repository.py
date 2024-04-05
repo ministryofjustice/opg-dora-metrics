@@ -14,19 +14,41 @@ from log.logger import logging
 from utils.decorator import timer
 from utils.dates import between
 from pprint import pp
+from enum import Enum
 
+class KeepWorkflowRunFields(Enum):
+    Id = 'id'
+    Name = 'name'
+    CreatedAt = 'created_at'
+    Conclusion = 'conclusion'
+
+    @classmethod
+    def strings(cls) -> list[str]:
+        return [e.value for e in cls]
+
+class KeepPullRequestFields(Enum):
+    Id = 'id'
+    Title = 'title'
+    MergedAt = 'merged_at'
+    State = 'state'
+
+    @classmethod
+    def strings(cls) -> list[str]:
+        return [e.value for e in cls]
 
 
 class GithubRepository:
-    """"""
+    """GithubRepository provides a series of methods that wrap and process calls using the github sdk.
 
+    Main aim is to fetch metric values for a specific repository
+    """
     g:Github = None
     slug:str = None
     r:Repository = None
 
+
     @timer
     def __init__(self, g:Github, slug:str) -> None:
-        """"""
         self.g = g
         self.slug = slug
         self.r = self._repo()
@@ -34,6 +56,7 @@ class GithubRepository:
 
     @timer
     def _repo(self) -> Repository:
+        logging.info('calling github api to get repository')
         return self.g.get_repo(self.slug)
 
     @timer
@@ -41,29 +64,29 @@ class GithubRepository:
         """Use the repos full_name"""
         return self.r.full_name
 
+    ############
+    # Metrics
+    ############
+    @timer
+    def deployment_frequency(self, branch:str, start:date, end:date, workflow_pattern:str = ' live'):
+        """"""
 
     ############
     # Pull Requests
     ############
 
     @timer
-    def _pull_requests(self, branch:str, start:date, end:date, state:str = 'closed') -> list[PullRequest]:
-        """Deals with the paginated list sand returns a normal list so there is no futher rate limiting and allows for mocking of this result"""
+    def _get_pull_requests(self, branch:str, state:str = 'closed') -> list[PullRequest]:
+        """Deals with the paginated list and returns a normal list so there is no futher rate limiting and allows for mocking of this result"""
+        logging.info('calling github api for pull requests')
         prs:PaginatedList[PullRequest] = self.r.get_pulls(base=branch, state=state, sort='merged_at', direction='desc')
         all:list[PullRequest] = [pr for pr in prs]
         return all
 
     @timer
-    def pull_requests(self, branch:str, start:date, end:date, state:str = 'closed') -> list[Item]:
-        """Fetch the pull requests that were merted between the start and end date passed.
-
-        """
-        logging.info('getting pull requests', repo=self.name(), branch=branch, start=start, end=end, state=state)
-
-        fields:list[str] = ['title', 'merged_at', 'state']
-        prs:list[PullRequest] = self._pull_requests(branch, start, end, state)
-        all:list[Item] = []
-
+    def _parse_pull_requests(self, prs:list[PullRequest], fields:list[str], branch:str, start:date, end:date) -> list[Item]:
+        """Reduces all pr's down to those within date range - converts to list of Item"""
+        found:list[Item] = []
         total:int = len(prs)
         pr:PullRequest = None
         for i, pr in enumerate(prs):
@@ -71,29 +94,72 @@ class GithubRepository:
             item.rename('merged_at', 'date')
             if between(item.date, start, end):
                 logging.debug('within range ✅', repo=self.name(), i=f'{i}/{total}', pr=item.title, branch=branch, date=item.date)
-                all.append(item)
+                found.append(item)
             else:
                 logging.debug('out of range ❌', repo=self.name(), i=f'{i}/{total}', pr=item.title, branch=branch, date=item.date)
-        return all
+        return found
+
+    @timer
+    def pull_requests(self, branch:str, start:date, end:date, state:str = 'closed') -> list[Item]:
+        """Return a list of Item objects that have been reduce down to attributes from KeepWorkflowRunFields
+
+        Calls _get_pull_requests to fetch all pull requests for the branch name, this may be many hundreds as the api
+        has no date range limit
+        Then call _parse_pull_requests with the result to reduce the set to those that are within the date range and
+        in turn converts the matching pr's into Item objects.
+
+        Parameters:
+
+        branch (str):   Branch that the pull request was to merge into
+        start (date):   Start of the date range to query for
+        end (date):     End of the date range to query for
+        state (str):    State of the pull request (default: closed)
+        """
+        logging.info('getting pull requests', repo=self.name(), branch=branch, start=start, end=end, state=state)
+
+        fields:list[str] = GithubRepository._fields(KeepPullRequestFields)
+        prs:list[PullRequest] = self._pull_requests(branch, state)
+        found:list[Item] = self._parse_pull_requests(prs, fields, branch, start, end)
+        return found
 
     ############
     # Workflows
     ############
     @timer
-    def _workflow_runs(self, branch:str, date_range:str) -> list[WorkflowRun]:
+    def _get_workflow_runs(self, branch:str, date_range:str) -> list[WorkflowRun]:
         """Deals with the paginated list sand returns a normal list so there is no futher rate limiting etc"""
+        logging.info('calling github api for workflow runs')
         runs:PaginatedList[WorkflowRun] = self.r.get_workflow_runs(branch=branch, created=date_range)
-        all: list[WorkflowRun] = [run for run in runs]
-
-
+        all:list[WorkflowRun] = [run for run in runs]
         return all
 
     @timer
-    def workflow_runs(self, pattern:str, branch:str, start: date, end:date) -> list[Item]:
-        """Return a list of Simple objects using only ['name', 'conclusion', 'date']
+    def _parse_workflow_runs(self, runs:list[WorkflowRun], fields:list[str], pattern:str, start: date, end:date) -> list[Item]:
+        """Reduces all workflows down to those that match pattern and within date range - converts to list of Item.
 
-        Iterates over the result from repository.get_workflow_runs() and only returns those values
-        that match the string pattern passed (using re.search).
+        Note: Only attributes whose name is within fields will be added to the Item object
+        """
+        found:list[Item] = []
+        for workflow in runs:
+            if not between(workflow.created_at, start, end):
+                logging.debug('outside of date range ❌', repo=self.name(), workflow=workflow.name, pattern=pattern, branch=workflow.head_branch, date=workflow.created_at)
+            elif re.search(pattern, workflow.name.lower()):
+                logging.debug('match ✅', repo=self.name(), workflow=workflow.name, pattern=pattern, branch=workflow.head_branch, date=workflow.created_at)
+                item:Item = Item(data=workflow, attrs_to_use=fields)
+                # use the reduced version and standardise date field to be 'date'
+                item.rename('created_at', 'date')
+                found.append(item)
+            else:
+                logging.debug('no match ❌', repo=self.name(), workflow=workflow.name, pattern=pattern, branch=workflow.head_branch, date=workflow.created_at)
+        return found
+
+    @timer
+    def workflow_runs(self, pattern:str, branch:str, start: date, end:date) -> list[Item]:
+        """Return a list of Item objects that have been reduce down to attributes from KeepWorkflowRunFields
+
+        Calls _get_workflow_runs to fetch pull workflow runs from for the branch and date range passed.
+        Then call _parse_workflow_runs with the result to reduce the set to those that match the name pattern, which
+        in turn converts the matching workflows into Item objects.
 
         Parameters:
 
@@ -104,22 +170,13 @@ class GithubRepository:
         """
         logging.info('looking for workflow runs matching pattern', repo=self.name(), pattern=pattern, branch=branch, start=start, end=end)
 
-        fields: list[str] = ['name', 'conclusion', 'created_at']
-        found:list[Item] = []
+        fields: list[str] = KeepWorkflowRunFields.strings()
         date_range:str = f'{start}..{end}'
-        # fetch all
-        all:list[WorkflowRun] = self._workflow_runs(branch, date_range)
-        for workflow in all:
-            if re.search(pattern, workflow.name.lower()):
-                logging.debug('match ✅', repo=self.name(), workflow=workflow.name, pattern=pattern, branch=branch, start=start, end=end)
-                item:Item = Item(data=workflow, attrs_to_use=fields)
-                # use the reduced version and standardise date field to be 'date'
-                item.rename('created_at', 'date')
-                found.append(item)
-            else:
-                logging.debug('no match ❌', repo=self.name(), workflow=workflow.name, pattern=pattern, branch=branch, start=start, end=end)
 
-        logging.info('finished workflow runs', found=len(found), repo=self.name(), pattern=pattern, branch=branch, start=start, end=end)
+        all:list[WorkflowRun] = self._get_workflow_runs(branch, date_range)
+        found:list[Item] = self._parse_workflow_runs(all, fields, pattern, start, end)
+
+        logging.info('finished workflow runs', found=len(found), total=len(all), repo=self.name(), pattern=pattern, branch=branch, start=start, end=end)
         return found
 
     ##### Main metrics #####
@@ -140,103 +197,3 @@ class GithubRepository:
     #         runs = self.pull_requests(branch, start, end)
 
     #     aggregated:dict[str, Simple] = self.aggregated_by_date(runs, start, end)
-
-    # ##### Pull request / merge related #####
-
-    # def pull_requests(
-    #         self,
-    #         branch:str,
-    #         start:date,
-    #         end:date,
-    #         state:str = 'closed') -> tuple[int, list[Simple], list[Simple]]:
-    #     """Fetch the pull requests that were merted between the start and end date passed.
-
-    #     """
-    #     logging.info(f"[{self.name()}] pull_requests between [{start}..{end}] for [{branch}] in state [{state}]")
-    #     fields:list[str] = ['title', 'merged_at', 'state']
-
-    #     prs:PaginatedList[PullRequest] = self.r.get_pulls(base=branch, state=state, sort='merged_at', direction='desc')
-    #     all:list[Simple] = []
-    #     in_range: list[Simple] = []
-
-    #     total:int = prs.totalCount
-    #     pr:PullRequest = None
-    #     for i, pr in enumerate(prs):
-    #         s:Simple = Simple.instance(pr, fields)
-    #         s.set('date', s.get('merged_at'))
-    #         del s.merged_at
-
-    #         all.append(s)
-    #         if between(start, end):
-    #             logging.debug(f"[{self.name()}] [{i+1}/{total}] PR for [{branch}]@[{pr.merged_at}] in range ✅")
-    #             in_range.append(pr)
-    #         else:
-    #             logging.debug(f"[{self.name()}] [{i+1}/{total}] PR for [{branch}]@[{pr.merged_at}] not in range ❌")
-    #     return total, in_range, all
-
-
-    # ##### Workflow frequency related #####
-
-    # def aggregated_by_date(self, runs:list[Simple], start:date, end:date) -> dict[str, Simple]:
-    #     """Return a dict of workflow run counters grouped by YYYY-MM of the created_at date.
-
-    #     Creates a list of valid months (YYYY-MM) between start & end values and generates an initial empty
-    #     counters for each
-
-    #     Then iterates over the runs passed and creates an aggregated counter for each month based on
-    #     the workflow conclusion
-
-    #     Parameters:
-
-    #     runs (list):    Set of Simple that we want to aggregate into months
-    #     start (date):   Start of the date range
-    #     end (date):     End of the date range
-
-    #     """
-    #     logging.info(f"[{self.name()}] aggregated_workflow_runs between [{start}..{end}] for runs passed")
-
-
-    #     keys = year_month_list(start, end)
-    #     # pre-populate the list
-    #     aggregated:dict[str, dict] = {year_month: {} for year_month in keys}
-    #     func = lambda x : x.get('date').strftime('%Y-%m')
-    #     # group by a field, and setup totals
-    #     collection = Collection(runs)
-    #     totals = collection.totals('conclusion', func)
-    #     # limit to just known months
-    #     aggregated = {k:v for k,v in totals.items() if k in keys}
-    #     return aggregated
-
-
-    # def workflow_runs(self, pattern:str, branch:str, start: date, end:date) -> list[Simple]:
-    #     """Return a list of Simple objects using only ['name', 'conclusion', 'date']
-
-    #     Iterates over the result from repository.get_workflow_runs() and only returns those values
-    #     that match the string pattern passed (using re.search).
-
-    #     Parameters:
-
-    #     pattern (str):  Used to pattern match against the lower case version of workflow.name using re.search
-    #     branch (str):   Branch that the workflow ran against
-    #     start (date):   Start of the date range to query for
-    #     end (date):     End of the date range to query for
-    #     """
-    #     logging.info(f"[{self.name()}] workflow_runs matching [{pattern}] on [{branch}] between [{start}..{end}]")
-    #     fields: list[str] = ['name', 'conclusion', 'created_at']
-    #     found:list[Simple] = []
-    #     date_range:str = f'{start}..{end}'
-    #     # fetch all
-    #     all:PaginatedList[WorkflowRun] = self.r.get_workflow_runs(branch=branch, created=date_range)
-    #     for workflow in all:
-    #         if re.search(pattern, workflow.name.lower()):
-    #             logging.debug(f"[{self.name()}] [workflow:{workflow.name}] matches [{pattern}] ✅")
-    #             # use the reduced version and standardise date field to be 'date'
-    #             s:Simple = Simple.instance(workflow, fields)
-    #             s.set('date', s.get('created_at'))
-    #             del s.created_at
-    #             found.append(s)
-    #         else:
-    #             logging.debug(f"[{self.name()}] [workflow:{workflow.name}] does not match [{pattern}] ❌")
-
-    #     logging.info(f"[{self.name()}] found [{len(found)}] workflow_runs matching [{pattern}] on [{branch}] between [{start}..{end}]")
-    #     return found
