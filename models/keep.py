@@ -14,19 +14,21 @@ class Keep(Enum):
     Also allows use with faker to create versions of date with mocked attrs
     """
     # github
-    ID          = ('id', [PullRequest, WorkflowRun, Repository], int)
+    ID          = ('id', [PullRequest, WorkflowRun, Repository], int() )
     ## repos
-    FULL_NAME   = ('full_name', [Repository], str)
+    FULL_NAME   = ('full_name', [Repository], str() )
     ## pull requests
-    TITLE       = ('title', [PullRequest], str)
-    MERGED_AT   = ('merged_at', [PullRequest], datetime)
-    STATE       = ('state', [PullRequest],  list, ['closed', 'open'])
+    TITLE       = ('title', [PullRequest], str() )
+    MERGED_AT   = ('merged_at', [PullRequest], datetime.now() )
+    STATE       = ('state', [PullRequest],  list(), ['closed', 'open'])
+    NUMBER      = ('number', [PullRequest],  int())
     ## workflow runs
-    NAME        = ('name', [WorkflowRun], str)
-    CREATED_AT  = ('created_at', [WorkflowRun], datetime)
-    CONCLUSION  = ('conclusion', [WorkflowRun],  list, ['success', 'failure'])
+    NAME        = ('name', [WorkflowRun], str() )
+    CREATED_AT  = ('created_at', [WorkflowRun], datetime.now() )
+    CONCLUSION  = ('conclusion', [WorkflowRun],  list(), ['success', 'failure'])
 
-    def __new__(cls, attr:str, models:list, value_type, choices = None) -> Self:
+
+    def __new__(cls, attr:str, models:list, value_type, choices = []) -> Self:
         obj = object.__new__(cls)
         obj._value_ = attr
         obj.models = models

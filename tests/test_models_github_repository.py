@@ -1,6 +1,7 @@
 import pytest
 import random
-from datetime import date, datetime, timedelta
+from typing import Any
+from datetime import date, datetime, timedelta, timezone
 from unittest.mock import patch
 
 from faker import Faker
@@ -12,7 +13,7 @@ from github.Repository import Repository
 
 from models.github_repository import GithubRepository, KeepWorkflowRunFields, KeepPullRequestFields
 from models.item import Item
-from models.keep import attrs
+from models.keep import attrs, specs
 from log.logger import logging
 
 
@@ -30,7 +31,26 @@ fake = Faker()
 ################################################
 
 
+def faker_skel(cls) -> Any:
+    """"""
 
+    skel:dict = {}
+    config:list = specs(cls)
+
+    for field in config:
+        key = field['attr']
+        t = field.get('value_type', None)
+        # map the field
+        match t:
+            case int():
+                skel[key] = fake.random_number()
+            case str():
+                skel[key] = fake.sentence(nb_words=4)
+            case list():
+                skel[key] = random.choice(field.get('choices', []))
+            case datetime():
+                skel[key] = fake.date_time(tzinfo=timezone.utc, end_datetime = datetime.now(timezone.utc))
+    return skel
 
 @pytest.fixture
 def fixture_repository():
@@ -39,19 +59,10 @@ def fixture_repository():
     fixture_repository(full_name='test')
     """
     def create(**kwargs) -> Repository:
-        logging.info('creating faker repository')
-        return Repository(requester=None, headers={}, attributes=kwargs, completed=True)
-    return create
-
-@pytest.fixture
-def fixture_workflow_run():
-    """Provide a WorkflowRun instance, can pass named params to set attrs:
-
-    Example:
-    fixture_workflow_run(full_name='test')
-    """
-    def create(**kwargs) -> WorkflowRun:
-        return WorkflowRun(requester=None, headers={}, attributes=kwargs, completed=True)
+        skel:dict = faker_skel(Repository)
+        skel.update(kwargs)
+        logging.info('creating faker Repository')
+        return Repository(requester=None, headers={}, attributes=skel, completed=True)
     return create
 
 @pytest.fixture
@@ -65,26 +76,25 @@ def fixture_workflow_runs_in_range():
         # items within the date range
         for i in range(total):
             dt:datetime = fake.date_between(start_date=start, end_date=end)
-            props = {
-                'id': fake.random_number(),
+            skel:dict = faker_skel(WorkflowRun)
+            skel.update({
                 'created_at': dt.isoformat(),
-                'name': fake.sentence(nb_words=4) + name,
                 'conclusion': 'success' if i < success else 'failure'
-            }
+            })
+            skel['name'] += name
             runs.append(
-                WorkflowRun(requester=None, headers={}, attributes=props, completed=True)
+                WorkflowRun(requester=None, headers={}, attributes=skel, completed=True)
             )
         # items outside of range
         for i in range(extras):
             dt:datetime = fake.date_between(start_date='-50y', end_date=start - timedelta(days=-5))
-            props = {
-                'id': fake.random_number(),
+            skel:dict = faker_skel(WorkflowRun)
+            skel.update({
                 'created_at': dt.isoformat(),
-                'name': fake.sentence(nb_words=4) + name,
-                'conclusion': 'success'
-            }
+            })
+            skel['name'] += name
             runs.append(
-                WorkflowRun(requester=None, headers={}, attributes=props, completed=True)
+                WorkflowRun(requester=None, headers={}, attributes=skel, completed=True)
             )
 
         return runs
@@ -93,7 +103,7 @@ def fixture_workflow_runs_in_range():
 
 @pytest.fixture
 def fixture_prs_in_range():
-    """
+    """Provide a fixture to generate a list of fake pull requests
     """
     def create(branch:str, start:date, end:date, number_to_be_in_range:int) -> list[PullRequest]:
         """"""
@@ -106,15 +116,13 @@ def fixture_prs_in_range():
                 dt:datetime = fake.date_between(start_date=start, end_date=end)
             else:
                 dt:datetime = fake.date_between(start_date='-20y', end_date=start - timedelta(days=-10))
-            attrs = {
-                'id': fake.random_number(),
-                'number': fake.random_number(),
-                'branch': branch,
+            skel:dict = faker_skel(PullRequest)
+            skel.update({
                 'merged_at': dt.isoformat(),
-                'title': fake.sentence(nb_words=4),
+                'branch': branch,
                 'state': 'closed'
-            }
-            prs.append(PullRequest(requester=None, headers={}, attributes=attrs, completed=True))
+            })
+            prs.append(PullRequest(requester=None, headers={}, attributes=skel, completed=True))
         return prs
     return create
 
