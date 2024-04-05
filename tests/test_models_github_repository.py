@@ -25,14 +25,11 @@ from pprint import pp
 
 fake = Faker()
 
-
-################################################
-# Fixtures & side effects
-################################################
-
-
-def faker_skel(cls) -> Any:
-    """"""
+def faker_skel(cls, updates:dict={}) -> dict:
+    """Generate a skeleton of data in a dict based on the details store about the class
+    in the Keep enum object
+    Allows extra data to be passsed that will be added / overwritten using update
+    """
 
     skel:dict = {}
     config:list = specs(cls)
@@ -40,7 +37,7 @@ def faker_skel(cls) -> Any:
     for field in config:
         key = field['attr']
         t = field.get('value_type', None)
-        # map the field
+        # map the fields to the type we can handle
         match t:
             case int():
                 skel[key] = fake.random_number()
@@ -50,7 +47,13 @@ def faker_skel(cls) -> Any:
                 skel[key] = random.choice(field.get('choices', []))
             case datetime():
                 skel[key] = fake.date_time(tzinfo=timezone.utc, end_datetime = datetime.now(timezone.utc))
+
+    skel.update(updates)
     return skel
+
+################################################
+# Fixtures
+################################################
 
 @pytest.fixture
 def fixture_repository():
@@ -59,8 +62,7 @@ def fixture_repository():
     fixture_repository(full_name='test')
     """
     def create(**kwargs) -> Repository:
-        skel:dict = faker_skel(Repository)
-        skel.update(kwargs)
+        skel:dict = faker_skel(Repository, kwargs)
         logging.info('creating faker Repository')
         return Repository(requester=None, headers={}, attributes=skel, completed=True)
     return create
@@ -76,8 +78,7 @@ def fixture_workflow_runs_in_range():
         # items within the date range
         for i in range(total):
             dt:datetime = fake.date_between(start_date=start, end_date=end)
-            skel:dict = faker_skel(WorkflowRun)
-            skel.update({
+            skel:dict = faker_skel(WorkflowRun, {
                 'created_at': dt.isoformat(),
                 'conclusion': 'success' if i < success else 'failure'
             })
@@ -88,8 +89,7 @@ def fixture_workflow_runs_in_range():
         # items outside of range
         for i in range(extras):
             dt:datetime = fake.date_between(start_date='-50y', end_date=start - timedelta(days=-5))
-            skel:dict = faker_skel(WorkflowRun)
-            skel.update({
+            skel:dict = faker_skel(WorkflowRun, {
                 'created_at': dt.isoformat(),
             })
             skel['name'] += name
@@ -106,7 +106,6 @@ def fixture_prs_in_range():
     """Provide a fixture to generate a list of fake pull requests
     """
     def create(branch:str, start:date, end:date, number_to_be_in_range:int) -> list[PullRequest]:
-        """"""
         prs: list[PullRequest] = []
         count:int = random.randint(number_to_be_in_range, number_to_be_in_range*2)
         logging.warn('creating faker prs', count=count)
@@ -116,8 +115,7 @@ def fixture_prs_in_range():
                 dt:datetime = fake.date_between(start_date=start, end_date=end)
             else:
                 dt:datetime = fake.date_between(start_date='-20y', end_date=start - timedelta(days=-10))
-            skel:dict = faker_skel(PullRequest)
-            skel.update({
+            skel:dict = faker_skel(PullRequest, {
                 'merged_at': dt.isoformat(),
                 'branch': branch,
                 'state': 'closed'
