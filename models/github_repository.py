@@ -16,6 +16,9 @@ from utils.dates import between
 from pprint import pp
 from enum import Enum
 
+
+
+
 class KeepWorkflowRunFields(Enum):
     Id = 'id'
     Name = 'name'
@@ -68,8 +71,20 @@ class GithubRepository:
     # Metrics
     ############
     @timer
-    def deployment_frequency(self, branch:str, start:date, end:date, workflow_pattern:str = ' live'):
-        """"""
+    def deployment_frequency(self, start:date, end:date, branch:str='main', workflow_pattern:str = ' live'):
+        """Measure the number of github action workflow runs (success and failures) between the date range specified
+        as part of DORA style reporting.
+
+        Allows the workflow pattern name to be passed to reduce the number of workflows to just path to live versions.
+        Allows changing the release branch from the default of 'main', useful for older repository that may still be
+        on 'master'
+
+        If the repository is using an alternative deployment tool (jenkins, circleci etc) then uses merges into the
+        specified branch as a proxy measurement.
+        """
+        workflow_runs:list[Item] = self.workflow_runs(workflow_pattern, branch, start, end)
+        pp(workflow_runs)
+
 
     ############
     # Pull Requests

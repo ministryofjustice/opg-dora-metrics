@@ -18,9 +18,18 @@ from log.logger import logging
 from pprint import pp
 
 ################################################
+# Faker methods to generate skel valid objects
+################################################
+
+fake = Faker()
+
+
+################################################
 # Fixtures & side effects
 ################################################
-fake = Faker()
+
+
+
 
 @pytest.fixture
 def fixture_repository():
@@ -212,3 +221,16 @@ def test_models_GithubRepository_pull_requests(
             # get first item and check type
             first = found[0]
             assert first._type == PullRequest
+
+
+@pytest.mark.parametrize(
+    "slug, branch, start, end",
+    [
+        ("ministryofjustice/opg-lpa", "main", date(year=2024, month=1, day=1), date(year=2024, month=3, day=1))
+    ]
+)
+def test_models_GithubRepository_deployment_frequency(slug:str, branch:str, start:date, end:date):
+    """"""
+    g:Github = Github()
+    repo = GithubRepository(g, slug)
+    repo.deployment_frequency(start, end, branch=branch)
