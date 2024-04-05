@@ -22,15 +22,15 @@ install:
 # Run all tests
 tests: export LOG_LEVEL=WARN
 tests:
-	pytest --disable-warnings -s tests/
+	pytest --log-cli-level=INFO --disable-warnings ./tests/
 
 tests_with_api_calls: export GITHUB_ACCESS_TOKEN="${GITHUB_TOKEN}"
 tests_with_api_calls: export LOG_LEVEL=INFO
 tests_with_api_calls:
-	pytest --disable-warnings -s tests/
+	pytest --log-cli-level=INFO --disable-warnings ./tests/
 
 # Run a series of tests based on name, setup access token
 test: export GITHUB_ACCESS_TOKEN="${GITHUB_TOKEN}"
 test: export LOG_LEVEL=INFO
 test:
-	pytest --disable-warnings tests/ -s -k $(names)
+	pytest --log-cli-level=INFO -s --disable-warnings ./tests/ -k "$(names)"

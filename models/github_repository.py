@@ -1,4 +1,4 @@
-
+import json
 import re
 from typing import Tuple
 from datetime import date, datetime
@@ -21,14 +21,20 @@ class GithubRepository:
     """"""
 
     g:Github = None
+    slug:str = None
     r:Repository = None
 
     @timer
     def __init__(self, g:Github, slug:str) -> None:
         """"""
         self.g = g
-        self.r = g.get_repo(slug)
+        self.slug = slug
+        self.r = self._repo()
         logging.info('found repository', slug=slug)
+
+    @timer
+    def _repo(self) -> Repository:
+        return self.g.get_repo(self.slug)
 
     @timer
     def name(self) -> str:
@@ -41,6 +47,13 @@ class GithubRepository:
     ############
 
     @timer
+    def _pull_requests(self, branch:str, start:date, end:date, state:str = 'closed') -> list[PullRequest]:
+        """Deals with the paginated list sand returns a normal list so there is no futher rate limiting and allows for mocking of this result"""
+        prs:PaginatedList[PullRequest] = self.r.get_pulls(base=branch, state=state, sort='merged_at', direction='desc')
+        all:list[PullRequest] = [pr for pr in prs]
+        return all
+
+    @timer
     def pull_requests(self, branch:str, start:date, end:date, state:str = 'closed') -> list[Item]:
         """Fetch the pull requests that were merted between the start and end date passed.
 
@@ -48,19 +61,14 @@ class GithubRepository:
         logging.info('getting pull requests', repo=self.name(), branch=branch, start=start, end=end, state=state)
 
         fields:list[str] = ['title', 'merged_at', 'state']
-
-        prs:PaginatedList[PullRequest] = self.r.get_pulls(base=branch, state=state, sort='merged_at', direction='desc')
+        prs:list[PullRequest] = self._pull_requests(branch, start, end, state)
         all:list[Item] = []
 
-        total:int = prs.totalCount
+        total:int = len(prs)
         pr:PullRequest = None
         for i, pr in enumerate(prs):
-            item:Item = Item(data=pr, filter=fields)
-            ## ERROR - rename not adding in new version??
+            item:Item = Item(data=pr, attrs_to_use=fields)
             item.rename('merged_at', 'date')
-            # item.set('date', item.get('merged_at'))
-
-
             if between(item.date, start, end):
                 logging.debug('within range ✅', repo=self.name(), i=f'{i}/{total}', pr=item.title, branch=branch, date=item.date)
                 all.append(item)
@@ -71,6 +79,15 @@ class GithubRepository:
     ############
     # Workflows
     ############
+    @timer
+    def _workflow_runs(self, branch:str, date_range:str) -> list[WorkflowRun]:
+        """Deals with the paginated list sand returns a normal list so there is no futher rate limiting etc"""
+        runs:PaginatedList[WorkflowRun] = self.r.get_workflow_runs(branch=branch, created=date_range)
+        all: list[WorkflowRun] = [run for run in runs]
+
+
+        return all
+
     @timer
     def workflow_runs(self, pattern:str, branch:str, start: date, end:date) -> list[Item]:
         """Return a list of Simple objects using only ['name', 'conclusion', 'date']
@@ -91,11 +108,11 @@ class GithubRepository:
         found:list[Item] = []
         date_range:str = f'{start}..{end}'
         # fetch all
-        all:PaginatedList[WorkflowRun] = self.r.get_workflow_runs(branch=branch, created=date_range)
+        all:list[WorkflowRun] = self._workflow_runs(branch, date_range)
         for workflow in all:
             if re.search(pattern, workflow.name.lower()):
                 logging.debug('match ✅', repo=self.name(), workflow=workflow.name, pattern=pattern, branch=branch, start=start, end=end)
-                item:Item = Item(data=workflow, filter=fields)
+                item:Item = Item(data=workflow, attrs_to_use=fields)
                 # use the reduced version and standardise date field to be 'date'
                 item.rename('created_at', 'date')
                 found.append(item)
