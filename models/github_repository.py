@@ -10,6 +10,7 @@ from github.WorkflowRun import WorkflowRun
 from github.PullRequest import PullRequest
 
 from models.item import Item
+from models.keep import attrs
 from log.logger import logging
 from utils.decorator import timer
 from utils.dates import between
@@ -116,7 +117,7 @@ class GithubRepository:
 
     @timer
     def pull_requests(self, branch:str, start:date, end:date, state:str = 'closed') -> list[Item]:
-        """Return a list of Item objects that have been reduce down to attributes from KeepWorkflowRunFields
+        """Return a list of Item objects that have been reduce down to attributes from Keep data
 
         Calls _get_pull_requests to fetch all pull requests for the branch name, this may be many hundreds as the api
         has no date range limit
@@ -132,7 +133,7 @@ class GithubRepository:
         """
         logging.info('getting pull requests', repo=self.name(), branch=branch, start=start, end=end, state=state)
 
-        fields:list[str] = GithubRepository._fields(KeepPullRequestFields)
+        fields:list[str] = attrs(PullRequest)
         prs:list[PullRequest] = self._pull_requests(branch, state)
         found:list[Item] = self._parse_pull_requests(prs, fields, branch, start, end)
         return found
@@ -170,7 +171,7 @@ class GithubRepository:
 
     @timer
     def workflow_runs(self, pattern:str, branch:str, start: date, end:date) -> list[Item]:
-        """Return a list of Item objects that have been reduce down to attributes from KeepWorkflowRunFields
+        """Return a list of Item objects that have been reduce down to attributes from Keep config
 
         Calls _get_workflow_runs to fetch pull workflow runs from for the branch and date range passed.
         Then call _parse_workflow_runs with the result to reduce the set to those that match the name pattern, which
@@ -185,7 +186,7 @@ class GithubRepository:
         """
         logging.info('looking for workflow runs matching pattern', repo=self.name(), pattern=pattern, branch=branch, start=start, end=end)
 
-        fields: list[str] = KeepWorkflowRunFields.strings()
+        fields: list[str] = attrs(WorkflowRun)
         date_range:str = f'{start}..{end}'
 
         all:list[WorkflowRun] = self._get_workflow_runs(branch, date_range)

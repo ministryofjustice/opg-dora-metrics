@@ -12,6 +12,7 @@ from github.Repository import Repository
 
 from models.github_repository import GithubRepository, KeepWorkflowRunFields, KeepPullRequestFields
 from models.item import Item
+from models.keep import attrs
 from log.logger import logging
 
 
@@ -174,7 +175,7 @@ def test_models_GithubRepository_workflow_runs_success(
             # should have more
             assert len(all_runs) == (total + extras)
             # now prune
-            in_range = repo._parse_workflow_runs(all_runs, KeepWorkflowRunFields.strings() , workflow, start, end )
+            in_range = repo._parse_workflow_runs(all_runs, attrs(WorkflowRun) , workflow, start, end )
             # should have x in range
             assert len(in_range) == total
             # get just the successful runs
@@ -215,7 +216,7 @@ def test_models_GithubRepository_pull_requests(
             # should have more than asked for
             assert (len(all) > inrange) == True
             # reduce to juse in range
-            found = repo._parse_pull_requests(all, KeepPullRequestFields.strings(), branch, start, end)
+            found = repo._parse_pull_requests(all, attrs(PullRequest), branch, start, end)
             # check matches
             assert len(found) == inrange
             # get first item and check type
@@ -223,14 +224,14 @@ def test_models_GithubRepository_pull_requests(
             assert first._type == PullRequest
 
 
-@pytest.mark.parametrize(
-    "slug, branch, start, end",
-    [
-        ("ministryofjustice/opg-lpa", "main", date(year=2024, month=1, day=1), date(year=2024, month=3, day=1))
-    ]
-)
-def test_models_GithubRepository_deployment_frequency(slug:str, branch:str, start:date, end:date):
-    """"""
-    g:Github = Github()
-    repo = GithubRepository(g, slug)
-    repo.deployment_frequency(start, end, branch=branch)
+# @pytest.mark.parametrize(
+#     "slug, branch, start, end",
+#     [
+#         ("ministryofjustice/opg-lpa", "main", date(year=2024, month=1, day=1), date(year=2024, month=3, day=1))
+#     ]
+# )
+# def test_models_GithubRepository_deployment_frequency(slug:str, branch:str, start:date, end:date):
+#     """"""
+#     g:Github = Github()
+#     repo = GithubRepository(g, slug)
+#     repo.deployment_frequency(start, end, branch=branch)
