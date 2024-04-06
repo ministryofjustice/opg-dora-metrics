@@ -13,7 +13,7 @@ from github.Repository import Repository
 
 from models.github_repository import GithubRepository
 from models.item import Item
-from models.keep import attrs, specs
+from models.meta import attrs, specs
 from log.logger import logging
 
 
@@ -230,14 +230,26 @@ def test_models_GithubRepository_pull_requests(
             assert first._type == PullRequest
 
 
-# @pytest.mark.parametrize(
-#     "slug, branch, start, end",
-#     [
-#         ("ministryofjustice/opg-lpa", "main", date(year=2024, month=1, day=1), date(year=2024, month=3, day=1))
-#     ]
-# )
-# def test_models_GithubRepository_deployment_frequency(slug:str, branch:str, start:date, end:date):
-#     """"""
-#     g:Github = Github()
-#     repo = GithubRepository(g, slug)
-#     repo.deployment_frequency(start, end, branch=branch)
+@pytest.mark.parametrize(
+    "slug, branch, start, end",
+    [
+        ("ministryofjustice/opg-lpa", "main", date(year=2024, month=1, day=1), date(year=2024, month=2, day=1))
+    ]
+)
+def test_models_GithubRepository_deployment_frequency_no_workflows(
+    slug:str, branch:str, start:date, end:date,
+    fixture_repository
+    ):
+    """"""
+    # currently sit here as mock version fails to make a real api call - auth related
+    g:Github = Github()
+    repo = GithubRepository(g, slug)
+    # path the repo setup call
+    with patch('models.github_repository.GithubRepository._repo', return_value=fixture_repository(full_name=slug)) :
+
+        assert repo.r.full_name == slug
+
+        # force the workflow runs to be empty and therefore call the merge count
+        with patch('models.github_repository.GithubRepository.workflow_runs', return_value=[]):
+            r = repo.deployment_frequency(start, end, branch=branch)
+            pp(r)

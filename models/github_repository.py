@@ -10,7 +10,7 @@ from github.WorkflowRun import WorkflowRun
 from github.PullRequest import PullRequest
 
 from models.item import Item
-from models.keep import attrs
+from models.meta import attributes
 from log.logger import logging
 from utils.decorator import timer
 from utils.dates import between
@@ -58,8 +58,11 @@ class GithubRepository:
         If the repository is using an alternative deployment tool (jenkins, circleci etc) then uses merges into the
         specified branch as a proxy measurement.
         """
-        workflow_runs:list[Item] = self.workflow_runs(workflow_pattern, branch, start, end)
-        pp(workflow_runs)
+        data:list[Item] = self.workflow_runs(workflow_pattern, branch, start, end)
+        if len(data) == 0:
+            data = self.pull_requests(branch, start, end)
+
+        return data
 
 
     ############
@@ -71,6 +74,7 @@ class GithubRepository:
         """Deals with the paginated list and returns a normal list so there is no futher rate limiting and allows for mocking of this result"""
         logging.info('calling github api for pull requests')
         prs:PaginatedList[PullRequest] = self.r.get_pulls(base=branch, state=state, sort='merged_at', direction='desc')
+        pp(prs)
         all:list[PullRequest] = [pr for pr in prs]
         return all
 
@@ -108,8 +112,8 @@ class GithubRepository:
         """
         logging.info('getting pull requests', repo=self.name(), branch=branch, start=start, end=end, state=state)
 
-        fields:list[str] = attrs(PullRequest)
-        prs:list[PullRequest] = self._pull_requests(branch, state)
+        fields:list[str] = attributes(PullRequest)
+        prs:list[PullRequest] = self._get_pull_requests(branch, state)
         found:list[Item] = self._parse_pull_requests(prs, fields, branch, start, end)
         return found
 
@@ -161,7 +165,7 @@ class GithubRepository:
         """
         logging.info('looking for workflow runs matching pattern', repo=self.name(), pattern=pattern, branch=branch, start=start, end=end)
 
-        fields: list[str] = attrs(WorkflowRun)
+        fields: list[str] = attributes(WorkflowRun)
         date_range:str = f'{start}..{end}'
 
         all:list[WorkflowRun] = self._get_workflow_runs(branch, date_range)
