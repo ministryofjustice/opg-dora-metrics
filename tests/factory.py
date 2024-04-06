@@ -1,21 +1,16 @@
 from faker import Faker
-import random
-from typing import Any
-from datetime import datetime, date, timezone
-
-
-from github.PullRequest import PullRequest
-from github.WorkflowRun import WorkflowRun
-from github.Repository import Repository
-
+from typing import Any, TypeVar
+from github.GithubObject import GithubObject, CompletableGithubObject
 from models.item import Item
 from models.meta import _PropertyTypes, properties, attributes
 
-from pprint import pp
 
+G = TypeVar('G', Item, GithubObject, CompletableGithubObject)
 fake = Faker()
 
-
+############################
+# Internal functions to return faker data
+############################
 def _int(args:dict) -> int:
     return fake.random_number()
 
@@ -33,7 +28,9 @@ def _datetime(args:dict) -> str:
     e = args.get('end', '-1m')
     return fake.date_between(start_date=s, end_date=e).isoformat()
 
-
+############################
+#
+############################
 class faux:
     # map the property types to lamdas for generation
     _funcMap:dict = {
@@ -46,9 +43,7 @@ class faux:
 
     @staticmethod
     def _attrs(cls, **kwargs):
-        """Generate a skeleton of faker data for the class (cls) passed.
-
-        """
+        """Generate a skeleton of faker data for the class (cls) passed"""
         attrs:dict[str, Any] = {}
         props = properties(cls)
         names = attributes(cls)
@@ -66,12 +61,10 @@ class faux:
         return attrs
 
     @staticmethod
-    def Item(**kwargs) -> Item:
-        """Create a fake Item"""
-        return Item(kwargs)
-
-    @staticmethod
-    def PullRequest(**kwargs) -> PullRequest:
-        """"""
-        attributes = faux._attrs(PullRequest, **kwargs)
-        return PullRequest(requester=None, headers={}, completed=True, attributes=attributes)
+    def New(G, **kwargs) -> G:
+        """Create a new instance of type G and handle its setup with attrs"""
+        attrs = faux._attrs(G, **kwargs)
+        if G.__name__ == 'Item':
+            return Item(data=kwargs)
+        else:
+            return G(requester=None, headers={}, completed=True, attributes=attrs)

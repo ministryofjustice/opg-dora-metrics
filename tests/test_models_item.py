@@ -1,15 +1,12 @@
 import pytest
 from datetime import datetime, date
 from typing import Any
-from faker import Faker
-
 from github.WorkflowRun import WorkflowRun
+from tests.factory import faux
 
 from models.item import Item
 
 from pprint import pp
-
-fake = Faker()
 
 
 class Tester:
@@ -71,16 +68,8 @@ def fixture_workflow_runs():
         runs: list[WorkflowRun] = []
 
         for i in range(count):
-            dt:datetime = fake.date_between(start_date="-2y", end_date="-1m")
-            props = {
-                'id': fake.random_number(),
-                'created_at': dt.isoformat(),
-                'name': fake.sentence(nb_words=4),
-                'conclusion': 'success'
-            }
-            runs.append(
-                WorkflowRun(requester=None, headers={}, attributes=props, completed=True)
-            )
+            wfr = faux.New(WorkflowRun, start='-2y', end='-1m', conclusion='success')
+            runs.append(wfr)
         return runs
     return create
 
