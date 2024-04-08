@@ -1,4 +1,5 @@
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timezone, timedelta
+from dateutil.relativedelta import relativedelta
 import calendar
 from log.logger import logging
 from utils.decorator import timer
@@ -39,11 +40,18 @@ def between(t:datetime, start_date:date, end_date:date) -> bool:
     return (t is not None) and (t >= start and t <= end)
 
 @timer
-def year_month_list(start:date, end:date) -> list[str]:
-    """Generate a list of YYYY-mm keys between the start and end date"""
+def year_month_list(start:date, end:date, fmt:str = '%Y-%m') -> list[str]:
+    """Generate a list of YYYY-mm keys between the start and end date
+
+    Will return the month of the end date as well.
+    """
     d:list[str] = []
-    logging.debug(f"Generating year_month_range between [{start}] and [{end}]")
-    for y in range (start.year, end.year+1):
-        for m in range (start.month, end.month):
-            d.append(f'{y}-{m :02d}')
+
+    e = end.replace(day=20)
+    i = start.replace(day=1)
+    while i <= e:
+        d.append(i.strftime(fmt))
+        i += relativedelta(months=1)
+
+    logging.info("year month list", start=start, end=end, result=d)
     return d

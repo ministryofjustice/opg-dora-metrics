@@ -36,13 +36,6 @@ _model_properties:dict[Any, list[dict]] = {
     ],
 }
 
-_item_remap:dict[str, str] = {
-    'merged_at': 'date',
-    'created_at': 'date',
-    'conclusion': 'status',
-    'state': 'status'
-}
-
 def properties(cls) -> list[dict]:
     """get all attributes for this class we are interested in"""
     return _model_properties.get(cls, [])

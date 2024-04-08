@@ -116,7 +116,7 @@ def test_models_GithubRepository_init_success(slug:str, fixture_repository):
 @pytest.mark.parametrize(
     "slug, workflow, start, end, total, success",
     [
-        ("ministryofjustice/serve-opg", " live", date(year=2024, month=2, day=1), date(year=2024, month=3, day=1), 5, 1),
+        ("ministryofjustice/serve-opg", " live", date(year=2024, month=2, day=1), date(year=2024, month=4, day=1), 5, 1),
     ]
 )
 def test_models_GithubRepository_workflow_runs_success(
@@ -203,7 +203,7 @@ def test_models_GithubRepository_pull_requests(
 @pytest.mark.parametrize(
     "slug, branch, start, end, total",
     [
-        ("ministryofjustice/opg-lpa", "main", date(year=2023, month=6, day=1), date(year=2024, month=3, day=1), 30),
+        ("ministryofjustice/opg-lpa", "main", date(year=2024, month=1, day=1), date(year=2024, month=3, day=1), 30),
     ]
 )
 def test_models_GithubRepository_deployment_frequency_no_workflows(
@@ -240,12 +240,13 @@ def test_models_GithubRepository_deployment_frequency_no_workflows(
                 totals = repo._totals(grouped, 'status')
 
                 for ym, data in totals.items():
-                    count += data.get('total')
-                    success += data.get('total_success')
+                    count += data.get('total', 0)
+                    success += data.get('total_success', 0)
                 # check number matches what we expect from the generated set
                 # - as these are pull requests, they should all be a success
                 assert total == count == success
 
                 # check the averages
                 avg = repo._averages(totals)
-                pp(avg)
+                # all months should be present for all
+                assert len(avg.keys()) == len(totals.keys()) == len(grouped.keys())
