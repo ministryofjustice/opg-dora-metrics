@@ -1,8 +1,7 @@
 import pytest
 from typing import Any, Callable
-from models.item import Item
 from utils.average import averages
-from utils.dates import weekdays_in_month, str_to_date
+from utils.dates import weekdays_in_month, to_date
 
 from pprint import pp
 
@@ -22,10 +21,10 @@ from pprint import pp
 
     ]
 )
-def test_utils_averages(data:dict[str,list[Any]], test_key:str, expected:int):
+def test_utils_averages(data:dict[str,dict], test_key:str, expected:int):
     """Test the average calculations work with lamnda"""
     # lambda to devide the value by the number of weekdays for the month
-    f = lambda month, value: ( round( value / weekdays_in_month( str_to_date(month) ), 2 ) )
+    f = lambda month, value: ( round( value / weekdays_in_month( to_date(month) ), 2 ) )
 
     res:dict[str, Any] = averages(data, f)
     test = res[test_key]

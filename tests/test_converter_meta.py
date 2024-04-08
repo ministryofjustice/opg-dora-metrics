@@ -4,11 +4,11 @@ from github.Repository import Repository
 from github.WorkflowRun import WorkflowRun
 from github.PullRequest import PullRequest
 
-from models.meta import properties, property, attributes, _PropertyTypes
+from converter.meta import properties, property, attributes, _PropertyTypes
 from pprint import pp
 
 
-def test_models_meta():
+def test_converter_meta():
     """Test the enum handling returns correct number"""
     assert len(properties(Repository)) == 2
     assert len(properties(Repository)) == 2

@@ -1,7 +1,7 @@
 import pytest
 import random
 from typing import Any
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, timedelta
 from unittest.mock import patch
 
 from faker import Faker
@@ -12,9 +12,9 @@ from github.WorkflowRun import WorkflowRun
 from github.Repository import Repository
 
 from models.github_repository import GithubRepository
-from models.item import Item
-from models.meta import attributes, properties
+from converter.convert import to, remapper
 from log.logger import logging
+from utils.dates import between, to_date, to_datetime
 
 from tests.factory import faux
 
@@ -76,6 +76,21 @@ def fixture_prs_in_range():
     return create
 
 
+@pytest.fixture
+def fixture_pr_items():
+    """Create a series of Item objects based on PullRequest faked data"""
+    def create(branch:str, start:date, end:date, count:int) -> list[dict]:
+        """"""
+        prs: list[dict] = []
+        logging.warn('creating faker pr items', count=count)
+
+        for i in range(count):
+            pull = faux.New(PullRequest, start=start, end=end, branch=branch, state='closed')
+            item = to(pull, remap=[remapper('merged_at', 'date'), remapper('state', 'status', lambda x: ('success')) ])
+            prs.append(item)
+        return prs
+    return create
+
 ################################################
 # Tests
 ################################################
@@ -132,11 +147,11 @@ def test_models_GithubRepository_workflow_runs_success(
             # should have more
             assert len(all_runs) == (total + extras)
             # now prune
-            in_range = repo._parse_workflow_runs(all_runs, attributes(WorkflowRun) , workflow, start, end )
+            in_range = repo._parse_workflow_runs(all_runs, workflow, start, end )
             # should have x in range
             assert len(in_range) == total
             # get just the successful runs
-            good = [d for d in in_range if d.get('conclusion') == 'success']
+            good = [d for d in in_range if d.get('status') == 'success']
             assert len(good) == success
 
 
@@ -170,6 +185,7 @@ def test_models_GithubRepository_pull_requests(
             return_value= fixture_prs_in_range(branch=branch, start=start, end=end, number_to_be_in_range=inrange)
             ) :
             all = repo._get_pull_requests(branch)
+            #### SOMETIMES GET FAILURES???
             if len(all) <= inrange:
                 print(f'len:{len(all)} inrange:{inrange}')
                 for v in all:
@@ -178,36 +194,58 @@ def test_models_GithubRepository_pull_requests(
             # should have more than asked for
             assert (len(all) >= inrange) == True
 
-
             # reduce to juse in range
-            found = repo._parse_pull_requests(all, attributes(PullRequest), branch, start, end)
+            found = repo._parse_pull_requests(all, branch, start, end)
             # check matches
             assert len(found) == inrange
-            # get first item and check type
-            first = found[0]
-            assert first._type == PullRequest
 
 
-# @pytest.mark.parametrize(
-#     "slug, branch, start, end",
-#     [
-#         ("ministryofjustice/opg-lpa", "main", date(year=2024, month=1, day=1), date(year=2024, month=2, day=1))
-#     ]
-# )
-# def test_models_GithubRepository_deployment_frequency_no_workflows(
-#     slug:str, branch:str, start:date, end:date,
-#     fixture_repository
-#     ):
-#     """"""
-#     # currently sit here as mock version fails to make a real api call - auth related
-#     g:Github = Github()
-#     repo = GithubRepository(g, slug)
-#     # path the repo setup call
-#     with patch('models.github_repository.GithubRepository._repo', return_value=fixture_repository(full_name=slug)) :
+@pytest.mark.parametrize(
+    "slug, branch, start, end, total",
+    [
+        ("ministryofjustice/opg-lpa", "main", date(year=2023, month=6, day=1), date(year=2024, month=3, day=1), 30),
+    ]
+)
+def test_models_GithubRepository_deployment_frequency_no_workflows(
+    slug:str, branch:str, start:date, end:date, total:int,
+    fixture_repository,
+    fixture_pr_items,
+    ):
+    """Test correct number of items are returned, all as pull request and all within range"""
 
-#         assert repo.r.full_name == slug
+    # path the repo setup call
+    with patch('models.github_repository.GithubRepository._repo', return_value=fixture_repository(full_name=slug)) :
+        g:Github = Github()
+        repo = GithubRepository(g, slug)
+        # check name
+        assert repo.r.full_name == slug
+        # force the workflow runs to be empty and therefore call the merge count
+        with patch('models.github_repository.GithubRepository.workflow_runs', return_value=[]):
+            # replace the pull request data with fixture data
+            with patch.object(
+                repo, 'pull_requests',
+                return_value=fixture_pr_items(branch=branch, start=start, end=end, count=total)):
+                # now test the segments of the deployment frequency setup
+                data:list[dict] = repo.pull_requests(branch, start, end, 'closed')
 
-#         # force the workflow runs to be empty and therefore call the merge count
-#         with patch('models.github_repository.GithubRepository.workflow_runs', return_value=[]):
-#             r = repo.deployment_frequency(start, end, branch=branch)
-#             pp(r)
+                # check the grouping is all in range
+                grouped = repo._groupby(data, start, end)
+
+                for ym, d in grouped.items():
+                    assert between ( to_datetime(ym) , start, end) == True
+
+                # check the totals match
+                count = 0
+                success = 0
+                totals = repo._totals(grouped, 'status')
+
+                for ym, data in totals.items():
+                    count += data.get('total')
+                    success += data.get('total_success')
+                # check number matches what we expect from the generated set
+                # - as these are pull requests, they should all be a success
+                assert total == count == success
+
+                # check the averages
+                avg = repo._averages(totals)
+                pp(avg)

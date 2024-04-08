@@ -5,6 +5,7 @@ from utils.decorator import timer
 from log.logger import logging
 
 T = TypeVar('T')
+D = TypeVar('D')
 
 @timer
 def group(listing:list[T], group_function:Callable[[T], Any]) -> dict[str, list[T]]:
@@ -18,3 +19,12 @@ def group(listing:list[T], group_function:Callable[[T], Any]) -> dict[str, list[
         result[key].extend(values)
 
     return result
+
+
+@timer
+def range_fill(items:dict[str, list[T]], keys:list[D]) -> dict[str, list[T]]:
+    """"""
+    for key in keys:
+        if key not in items.keys():
+            items[key] = {}
+    return items

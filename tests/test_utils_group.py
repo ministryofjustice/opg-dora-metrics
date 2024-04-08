@@ -1,7 +1,6 @@
 import pytest
 from typing import Any, Callable
 from datetime import datetime
-from models.item import Item
 from utils.group import group
 from faker import Faker
 
@@ -24,17 +23,7 @@ from pprint import pp
             ],
             'test',
             3,
-        ),
-        (
-            [
-                Item({'id': 1, 'type':'test', 'status': 'active1'}),
-                Item({'id': 2, 'type':'test', 'status': 'inactive2'}),
-                Item({'id': 3, 'type':'test', 'status': 'pending3'}),
-                Item({'id': 4, 'type':'production', 'status': 'active'}),
-            ],
-            'test',
-            3,
-        ),
+        )
     ]
 )
 def test_utils_group_variable_list_types(data:list[str,Any], test_key:str, expected_count):

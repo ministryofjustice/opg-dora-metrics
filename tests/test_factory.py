@@ -5,15 +5,10 @@ from pprint import pp
 from github.Repository import Repository
 from github.PullRequest import PullRequest
 
-from models.item import Item
 
 def test_factory_generics():
     item = faux.New(Repository, full_name="test")
     assert type(item) == Repository
-
-    item = faux.New(Item, id=1)
-    assert type(item) == Item
-    assert item.get('id') == 1
 
 
 def test_factory_set_known_attribute():

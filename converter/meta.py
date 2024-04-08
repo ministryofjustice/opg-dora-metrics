@@ -19,7 +19,7 @@ _model_properties:dict[Any, list[dict]] = {
     #### GITHUB ITEMS ####
     Repository: [
         {'attribute': 'id', 't': _PropertyTypes.INT },
-        {'attribute': 'full_name', 't': _PropertyTypes.STR },
+        {'attribute': 'full_name', 't': _PropertyTypes.STR, 'map': '' },
     ],
     WorkflowRun: [
         {'attribute': 'id', 't': _PropertyTypes.INT },
@@ -34,7 +34,13 @@ _model_properties:dict[Any, list[dict]] = {
         {'attribute': 'merged_at', 't': _PropertyTypes.DATETIME },
         {'attribute': 'state', 't': _PropertyTypes.STATE },
     ],
+}
 
+_item_remap:dict[str, str] = {
+    'merged_at': 'date',
+    'created_at': 'date',
+    'conclusion': 'status',
+    'state': 'status'
 }
 
 def properties(cls) -> list[dict]:
@@ -50,5 +56,6 @@ def property(cls, field:str) -> dict:
     return {}
 
 def attributes(cls) -> list[str]:
+    """for this class, return list of attributes"""
     all = properties(cls)
     return [v.get('attribute') for v in all]

@@ -1,16 +1,13 @@
 from faker import Faker
 from typing import Any, TypeVar
 from github.GithubObject import GithubObject, CompletableGithubObject
-from models.item import Item
-from models.meta import _PropertyTypes, properties, attributes
-
-
-G = TypeVar('G', Item, GithubObject, CompletableGithubObject)
-fake = Faker()
+from converter.meta import _PropertyTypes, properties, attributes
 
 ############################
 # Internal functions to return faker data
 ############################
+fake = Faker()
+
 def _int(args:dict) -> int:
     return fake.random_number()
 
@@ -29,10 +26,13 @@ def _datetime(args:dict) -> str:
     return fake.date_between(start_date=s, end_date=e).isoformat()
 
 ############################
-#
+# generator class
 ############################
+G = TypeVar('G', GithubObject, CompletableGithubObject)
+
 class faux:
-    # map the property types to lamdas for generation
+    """Faker generation class for models being used in the app"""
+    # map the property types to lamdas for generation of data
     _funcMap:dict = {
         _PropertyTypes.INT.name: _int,
         _PropertyTypes.STR.name: _str,
@@ -64,7 +64,4 @@ class faux:
     def New(G, **kwargs) -> G:
         """Create a new instance of type G and handle its setup with attrs"""
         attrs = faux._attrs(G, **kwargs)
-        if G.__name__ == 'Item':
-            return Item(data=kwargs)
-        else:
-            return G(requester=None, headers={}, completed=True, attributes=attrs)
+        return G(requester=None, headers={}, completed=True, attributes=attrs)
