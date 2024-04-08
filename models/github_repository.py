@@ -8,7 +8,6 @@ from github.Repository import Repository
 from github.WorkflowRun import WorkflowRun
 from github.PullRequest import PullRequest
 
-from converter.meta import attributes
 from converter.convert import to, remapper
 from log.logger import logging
 from utils.decorator import timer
@@ -105,7 +104,6 @@ class GithubRepository:
         """Deals with the paginated list and returns a normal list so there is no futher rate limiting and allows for mocking of this result"""
         logging.info('calling github api for pull requests')
         prs:PaginatedList[PullRequest] = self.r.get_pulls(base=branch, state=state, sort='merged_at', direction='desc')
-        pp(prs)
         all:list[PullRequest] = [pr for pr in prs]
         return all
 

@@ -185,12 +185,6 @@ def test_models_GithubRepository_pull_requests(
             return_value= fixture_prs_in_range(branch=branch, start=start, end=end, number_to_be_in_range=inrange)
             ) :
             all = repo._get_pull_requests(branch)
-            #### SOMETIMES GET FAILURES???
-            if len(all) <= inrange:
-                print(f'len:{len(all)} inrange:{inrange}')
-                for v in all:
-                    pp(v)
-
             # should have more than asked for
             assert (len(all) >= inrange) == True
 
@@ -230,7 +224,6 @@ def test_models_GithubRepository_deployment_frequency_no_workflows(
 
                 # check the grouping is all in range
                 grouped = repo._groupby(data, start, end)
-
                 for ym, d in grouped.items():
                     assert between ( to_datetime(ym) , start, end) == True
 
@@ -245,7 +238,6 @@ def test_models_GithubRepository_deployment_frequency_no_workflows(
                 # check number matches what we expect from the generated set
                 # - as these are pull requests, they should all be a success
                 assert total == count == success
-
                 # check the averages
                 avg = repo._averages(totals)
                 # all months should be present for all

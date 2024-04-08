@@ -34,9 +34,10 @@ def weekdays_in_month(period:date) -> int:
 @timer
 def between(t:datetime, start_date:date, end_date:date) -> bool:
     """Confirms if datetime is between the date range and not None"""
-    t = t.replace(tzinfo=timezone.utc)
     start:datetime = datetime(start_date.year, start_date.month, start_date.day, 0, 0, 0, tzinfo=timezone.utc)
     end:datetime = datetime(end_date.year, end_date.month, end_date.day, 0, 0, 0, tzinfo=timezone.utc)
+    if t is not None:
+        t = t.replace(tzinfo=timezone.utc)
     return (t is not None) and (t >= start and t <= end)
 
 @timer
