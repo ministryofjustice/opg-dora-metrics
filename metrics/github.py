@@ -5,7 +5,7 @@ from github import Github
 
 from models.github_repository import GithubRepository
 from utils.decorator import timer
-from utils.dates import weekdays_in_month, to_date
+from utils.dates import weekdays_in_month, to_date, year_month_list
 from log.logger import logging
 
 from pprint import pp
@@ -20,7 +20,7 @@ def deployment_frequency( repositories:list[dict[str,str]], start:date, end:date
     # stat items
     repository_names:list[str] = []
     weekdays:dict[str, int] = {}
-
+    count_per: dict[str, dict] = {}
     for conf in repositories:
         logging.debug('repository config', conf=conf)
 
@@ -29,6 +29,7 @@ def deployment_frequency( repositories:list[dict[str,str]], start:date, end:date
         logging.debug('repository name', name=repo.name())
 
         df:dict[str, dict[str, Any]] = repo.deployment_frequency(start, end, conf.get('branch'), conf.get('workflow') )
+        count_per[repo.name()] = df
         # merge together
         for key,values in df.items():
             weekdays[key] = weekdays_in_month( to_date(key) )
@@ -45,10 +46,11 @@ def deployment_frequency( repositories:list[dict[str,str]], start:date, end:date
             'end': end.isoformat(),
             'repositories': repository_names,
             'weekdays': weekdays,
+            'months': year_month_list(start, end),
         },
-        'result': all
+        'accumulated': all,
+        'raw': count_per
     }
-    pp(response)
     logging.info('deployment frequencies', result=response)
 
     return response

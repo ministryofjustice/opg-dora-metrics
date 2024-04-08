@@ -1,124 +1,74 @@
 import argparse
 import os
-import json
-import logging
-from argparse import RawTextHelpFormatter
-from datetime import date, datetime
-from gh.auth import init
-from gh.team import repositories_and_workflows
-from gh.merges import merges_to_branch
-from gh.frequency import workflow_runs_by_month_fuzzy
 from github import Github, Organization, Team
 from github.Repository import Repository
 
+from gh.auth import init
+from metrics.github import deployment_frequency
+from log.logger import logging
+from argparse import RawTextHelpFormatter
+from converter.convert import to
+from utils.args import date_range_split, date_from_duration, github_organisation_and_team, github_repository_branch_workflow_list
+
+
 from pprint import pp
 
-def write(outputfile:str, all_results:dict):
-    if outputfile is not None:
-        with open(outputfile, 'w+') as fp:
-            json.dump(all_results, fp)
-
-def stats(justresults:dict) -> dict:
-    """Generate monhtly stats for the all"""
-    totals:dict = {}
-    for _, res in justresults.items():
-        for ym, stats in res.items():
-            current_success = totals.get(ym, {'successes':0}).get('successes')
-            current_total = totals.get(ym, {'total':0}).get('total')
-            s = current_success + stats['success']
-
-            for k,v in stats.items():
-                if k != "weekdays" and k != "average_success_per_day" and k != "merge_based":
-                    current_total += v
-
-            totals[ym] = {
-                'days': stats['weekdays'],
-                'successes': s,
-                'average_success': round(s / stats['weekdays'], 2),
-                'total': current_total,
-                'average': round(current_total / stats['weekdays'], 2)
-            }
-    return totals
 
 def main() :
-    logging.basicConfig(level=os.environ.get('LOGLEVEL', 'INFO').upper())
-    # handle args
-    parser = argparse.ArgumentParser(formatter_class=RawTextHelpFormatter)
-    parser.add_argument("--start", help="Start date (format: 2024-02)", required=False, type=str)
-    parser.add_argument("--end", help="End date (format: 2024-04)", required=False, type=str)
-    parser.add_argument("--o", help="filename to write results into", required=False, default="./github_deployment_frequency.json")
 
-    group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument(
-        '--ot', '--organisation-and-team',
-        help="Slug of org and team to generate list of repositories from.\n"
-                "Format <organisation-slug>:<team-slug>\n"
-                "Example: ministryofjustice:opg"
-    )
-    group.add_argument(
-        "--rwl", "--repository-branch-and-workflow-list",
-        action='append',
-        help="Full repository name followed by branch then workflow name, seperated by a colon.\n"
-            "Can specify multiple instances.\n"
-            "Example (ministryofjustice/serve-opg:main: live$)",
-    )
+    parser = argparse.ArgumentParser(formatter_class=RawTextHelpFormatter)
+
+    ## cli args for report start / end dates
+    dates = parser.add_argument_group("Reporting period (fixed or relative)")
+    dates_mx = dates.add_mutually_exclusive_group(required=True)
+    dates_mx.add_argument('--date-range',
+                          help='Date range - format: 2024-01..2024-03',
+                          type=date_range_split)
+    dates_mx.add_argument('--duration',
+                          help='Number of months ago to use as start date, with end date being today',
+                          type=date_from_duration)
+
+    ## args for which repositories
+    repoconfig = parser.add_argument_group("Repositories to report on")
+    repoconfig_mx = repoconfig.add_mutually_exclusive_group(required=True)
+    repoconfig_mx.add_argument("--org-team",
+                            help="Specify the organisation and team slugs (<org-slug>:<team-slug>)",
+                            type=github_organisation_and_team)
+    repoconfig_mx.add_argument("--repo-branch-workflow",
+                            action='append',
+                            help="Specify multiple repo-branch-workflow patterns (<repo-full-name>:<branch>:<workflow-name>)",
+                            type=github_repository_branch_workflow_list)
+
 
     args = parser.parse_args()
-    outputfile = args.o
-    # setup auth
-    token = str( os.environ.get("GITHUB_ACCESS_TOKEN", "" ))
+
+    date_range = args.duration if args.duration is not None else args.date_range
+    repoconfig = args.org_team if args.org_team is not None else args.repo_branch_workflow
+    logging.info("running report", date_range=date_range, repoconfig=repoconfig)
+
     g:Github
-
-    repo_and_workflows:list = []
-    # if this has been triggered with org / team setup, then
-    # generate a list that matches input from the github api
-    #  Note: the workflow is assumed to contain ' live', as in 'path to live'
-    if args.rwl is None:
-        org_slug, team_slug = map(str, args.ot.split(':'))
-        g, _, team = init(token, org_slug, team_slug)
-        repo_and_workflows = repositories_and_workflows(team)
+    team:Team
+    repository_report_config: list[dict[str,str]] = []
+    # if this is dict, then we need to fetch all repos for this org
+    if type(repoconfig) == dict:
+        g, _, team = init(token=os.environ.get("GITHUB_ACCESS_TOKEN", None ),
+                            organisation_slug=repoconfig['org'],
+                            team_slug=repoconfig['team'])
+        # get repos for team and covnert to same format used for listed versions
+        logging.warn("generating repo config from team repositories", team=team.name() )
+        repository_report_config = [{'repo':i.full_name, 'branch': i.default_branch, 'workflow':' live'}  for i in team.get_repos() ]
     else:
-        g, _, _ = init(token)
-        repo_and_workflows = list(args.rwl)
-
-    start:date = datetime.strptime(str(args.start), '%Y-%m').date()
-    end:date = datetime.strptime(str(args.end), '%Y-%m').date()
-
-    all_results:dict = {
-        'params': {
-            'start': f'{start}',
-            'end': f'{end}',
-            'org-team': args.ot,
-            'repo-branch-workflow': args.rwl
-        },
-        'stats': {},
-        'results': {}
-    }
-    i:int = 0
-    t:int = len(repo_and_workflows)
-    for rw in repo_and_workflows:
-        i = i + 1
-        repo, branch, workflow = map(str, rw.split(':'))
-        logging.info(f"[{repo}] ({i}/{t}) [branch:{branch}] [workflow:{workflow}]")
-
-        r:Repository = g.get_repo(repo)
-        # Try to get workflow runs directly
-        res = workflow_runs_by_month_fuzzy(workflow, r, start, end, branch)
-        # If this fails, then get merges into the default branch
-        if res is None:
-            logging.warning(f"[{repo}] [branch:{branch}] [workflow:{workflow}] not found, using merge counter as proxy")
-            res = merges_to_branch(r, start, end, branch)
-
-        all_results['results'][r.full_name] = res
-        # write results to file as we go along for debugging
-        write(outputfile, all_results)
+        g, _, _ = init(token=os.environ.get("GITHUB_ACCESS_TOKEN", None ) )
+        repository_report_config = list(args.repo_branch_workflow)
 
 
-    # now work out averages overall
-    justresults = all_results['results']
-    all_results['stats'] = stats(justresults)
-
-    write(outputfile, all_results)
+    data = deployment_frequency(repositories=repository_report_config,
+                                start=date_range['start'],
+                                end=date_range['end'],
+                                g=g
+                                )
+    data['args'] = args.__dict__
+    pp(data)
 
 if __name__ == "__main__":
     main()

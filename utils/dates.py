@@ -26,7 +26,7 @@ def weekdays_in_month(period:date) -> int:
             if day == 0 or i >= 5:
                 continue
             count += 1
-    logging.info('getting count fo weekdays for month', month=period, count=count)
+    logging.debug('weekdays in month', month=period, count=count)
     return count
 
 
@@ -53,6 +53,6 @@ def year_month_list(start:date, end:date, fmt:str = '%Y-%m') -> list[str]:
     while i <= e:
         d.append(i.strftime(fmt))
         i += relativedelta(months=1)
-
-    logging.info("year month list", start=start, end=end, result=d)
+    d.sort()
+    logging.debug("year month list", start=start, end=end, result=d)
     return d

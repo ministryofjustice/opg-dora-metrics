@@ -61,7 +61,7 @@ def remap_values(item:dict[str,Any], old_key:str, new_key:str, new_value:Callabl
     # set the value
     item[new_key] = value
     del item[old_key]
-    logging.info('remapped values', old_key=old_key, new_key=new_key, result=item)
+    logging.debug('remapped values', old_key=old_key, new_key=new_key, result=item)
     return item
 
 @timer
