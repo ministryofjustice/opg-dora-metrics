@@ -34,11 +34,11 @@ class GithubRepository:
         self.g = g
         self.slug = slug
         self.r = self._repo()
-        logging.info('found repository', slug=slug)
+        logging.debug('found repository', slug=slug)
 
     @timer
     def _repo(self) -> Repository:
-        logging.info('calling github api to get repository')
+        logging.debug('calling github api to get repository')
         return self.g.get_repo(self.slug)
 
     @timer
@@ -68,9 +68,9 @@ class GithubRepository:
             data = self.pull_requests(branch, start, end)
 
 
-        grouped = self._groupby(data, start, end)
-        totaled = self._totals(grouped, 'conclusion')
-        averages = self._averages(totaled)
+        grouped:dict[str, list[dict[str,Any]]] = self._groupby(data, start, end)
+        totaled:dict[str, dict[str,Any]] = self._totals(grouped, 'conclusion')
+        averages:dict[str, dict[str,Any]] = self._averages(totaled)
 
         return averages
 
@@ -102,7 +102,7 @@ class GithubRepository:
     @timer
     def _get_pull_requests(self, branch:str, state:str = 'closed') -> list[PullRequest]:
         """Deals with the paginated list and returns a normal list so there is no futher rate limiting and allows for mocking of this result"""
-        logging.info('calling github api for pull requests')
+        logging.debug('calling github api for pull requests', repo=self.name())
         prs:PaginatedList[PullRequest] = self.r.get_pulls(base=branch, state=state, sort='merged_at', direction='desc')
         all:list[PullRequest] = [pr for pr in prs]
         return all
@@ -144,7 +144,7 @@ class GithubRepository:
         end (date):     End of the date range to query for
         state (str):    State of the pull request (default: closed)
         """
-        logging.info('getting pull requests', repo=self.name(), branch=branch, start=start, end=end, state=state)
+        logging.debug('getting pull requests', repo=self.name(), branch=branch, start=start, end=end, state=state)
         prs:list[PullRequest] = self._get_pull_requests(branch, state)
         found:list[dict[str,Any]] = self._parse_pull_requests(prs, branch, start, end)
         return found
@@ -155,7 +155,7 @@ class GithubRepository:
     @timer
     def _get_workflow_runs(self, branch:str, date_range:str) -> list[WorkflowRun]:
         """Deals with the paginated list sand returns a normal list so there is no futher rate limiting etc"""
-        logging.info('calling github api for workflow runs')
+        logging.debug('calling github api for workflow runs', repo=self.name())
         runs:PaginatedList[WorkflowRun] = self.r.get_workflow_runs(branch=branch, created=date_range)
         all:list[WorkflowRun] = [run for run in runs]
         return all
@@ -197,11 +197,11 @@ class GithubRepository:
         start (date):   Start of the date range to query for
         end (date):     End of the date range to query for
         """
-        logging.info('looking for workflow runs matching pattern', repo=self.name(), pattern=pattern, branch=branch, start=start, end=end)
+        logging.debug('looking for workflow runs matching pattern', repo=self.name(), pattern=pattern, branch=branch, start=start, end=end)
         date_range:str = f'{start}..{end}'
 
         all:list[WorkflowRun] = self._get_workflow_runs(branch, date_range)
         found:list[dict[str,Any]] = self._parse_workflow_runs(all, pattern, start, end)
 
-        logging.info('finished workflow runs', found=len(found), total=len(all), repo=self.name(), pattern=pattern, branch=branch, start=start, end=end)
+        logging.debug('finished workflow runs', found=len(found), total=len(all), repo=self.name(), pattern=pattern, branch=branch, start=start, end=end)
         return found

@@ -11,7 +11,7 @@ D = TypeVar('D')
 def group(listing:list[T], group_function:Callable[[T], Any]) -> dict[str, list[T]]:
     """Generic grouping of lists that presumes the group_function handles the method for joining"""
     result:dict[str, list[T]] = {}
-    logging.info('grouping list together')
+    logging.debug('grouping list together based on func', func=group_function)
     for key, values in groupby(listing, group_function):
         logging.debug('group key', key=key, type=type(key))
         if key not in result:
@@ -23,7 +23,7 @@ def group(listing:list[T], group_function:Callable[[T], Any]) -> dict[str, list[
 
 @timer
 def range_fill(items:dict[str, list[T]], keys:list[D]) -> dict[str, list[T]]:
-    """"""
+    """Add a blank dict for any missing values in keys """
     for key in keys:
         if key not in items.keys():
             items[key] = {}

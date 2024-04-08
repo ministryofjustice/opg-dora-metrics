@@ -13,7 +13,7 @@ from pprint import pp
 @timer
 def deployment_frequency( repositories:list[dict[str,str]], start:date, end:date, g:Github) -> dict[str, dict[str, dict[str,Any]]]:
     """Fetch aggregated default information for all repositories passed"""
-    logging.info('deployment frequency data', repository_config=repositories)
+    logging.debug('deployment frequency data', repository_config=repositories)
 
     # all the freq info
     all:dict[str, dict[str, Any]] = {}
@@ -22,13 +22,13 @@ def deployment_frequency( repositories:list[dict[str,str]], start:date, end:date
     weekdays:dict[str, int] = {}
     count_per: dict[str, dict] = {}
     for conf in repositories:
-        logging.debug('repository config', conf=conf)
-
+        logging.debug('getting deployment_frequency for repo', repository_name=conf.get('repo'))
         repo = GithubRepository(g, conf.get('repo'))
         repository_names.append(repo.name())
         logging.debug('repository name', name=repo.name())
 
         df:dict[str, dict[str, Any]] = repo.deployment_frequency(start, end, conf.get('branch'), conf.get('workflow') )
+        logging.info('deployment_frequency for repo', repo=repo.name(), df=df)
         count_per[repo.name()] = df
         # merge together
         for key,values in df.items():
@@ -39,6 +39,7 @@ def deployment_frequency( repositories:list[dict[str,str]], start:date, end:date
             # merge in values
             for k, v in values.items():
                 all[key][k] = all[key].get(k, 0) + v
+
 
     response:dict[str, dict[str, dict[str,Any]]] = {
         'meta': {

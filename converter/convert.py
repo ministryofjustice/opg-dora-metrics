@@ -101,5 +101,5 @@ def to(input:T, attrs:list[str] = [], remap:list[remapper] = None ) -> dict[str,
     # add converstion history
     converted['_source'] = t
 
-    logging.info('converted data to dict', type=t, result=converted)
+    logging.debug('converted data to dict', type=t, result=converted)
     return converted

@@ -39,7 +39,6 @@ def main() :
                             help="Specify multiple repo-branch-workflow patterns (<repo-full-name>:<branch>:<workflow-name>)",
                             type=github_repository_branch_workflow_list)
 
-
     args = parser.parse_args()
 
     date_range = args.duration if args.duration is not None else args.date_range

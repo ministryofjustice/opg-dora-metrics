@@ -30,10 +30,10 @@ def averages(
                 avgs[k.replace(prefix, 'average')] = avg
 
 
-        logging.info('averages calculated', key=key, avg=avgs)
+        logging.debug('averages calculated', key=key, avg=avgs)
 
         if merge:
-            logging.info('merging totals into average results', key=key)
+            logging.debug('merging totals into average results', key=key)
             avgs.update(data.items())
 
         result[key] = avgs
