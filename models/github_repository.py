@@ -1,12 +1,14 @@
 import re
 from typing import Any, Callable
 from datetime import date
+from dateutil.relativedelta import relativedelta
 
 from github import Github
 from github.PaginatedList import PaginatedList
 from github.Repository import Repository
 from github.WorkflowRun import WorkflowRun
 from github.PullRequest import PullRequest
+from github.Team import Team
 
 from converter.convert import to, remapper
 from log.logger import logging
@@ -46,6 +48,13 @@ class GithubRepository:
         """Use the repos full_name"""
         return self.r.full_name
 
+    @timer
+    def teams(self) -> list[Team]:
+        """Fetch all teams for this repo"""
+        all:list[Team] = []
+        for t in self.r.get_teams():
+            all.append(t)
+        return all
     ############
     # Metrics
     ############
@@ -64,13 +73,18 @@ class GithubRepository:
         """
         data:list[dict] = self.workflow_runs(workflow_pattern, branch, start, end)
         if len(data) == 0:
-            logging.warn('No workflow runs found, using proxy measure of pull requests')
+            logging.warn('No workflow runs found, using proxy measure of pull requests', repo=self.name())
             data = self.pull_requests(branch, start, end)
 
 
         grouped:dict[str, list[dict[str,Any]]] = self._groupby(data, start, end)
-        totaled:dict[str, dict[str,Any]] = self._totals(grouped, 'conclusion')
+        logging.debug('grouped results', grouped=grouped, repo=self.name())
+
+        totaled:dict[str, dict[str,Any]] = self._totals(grouped, 'status')
+        logging.debug('totaled results', totaled=totaled, repo=self.name())
+
         averages:dict[str, dict[str,Any]] = self._averages(totaled)
+        logging.debug('averages results', averages=averages, repo=self.name())
 
         return averages
 
@@ -153,11 +167,23 @@ class GithubRepository:
     # Workflows
     ############
     @timer
-    def _get_workflow_runs(self, branch:str, date_range:str) -> list[WorkflowRun]:
+    def _get_workflow_runs(self, branch:str, start: date, end:date) -> list[WorkflowRun]:
         """Deals with the paginated list sand returns a normal list so there is no futher rate limiting etc"""
         logging.debug('calling github api for workflow runs', repo=self.name())
-        runs:PaginatedList[WorkflowRun] = self.r.get_workflow_runs(branch=branch, created=date_range)
+
+        runs:list[WorkflowRun] = []
+        months = year_month_list(start, end)
+        for m in months:
+            rloop:PaginatedList[WorkflowRun] = self.r.get_workflow_runs(branch=branch, created=m )
+            logging.debug(f'found [{rloop.totalCount}] workflows', repo=self.name(), created=m, branch=branch)
+            for run in rloop:
+                runs.append(run)
+            # warn about api max numbers
+            if rloop.totalCount >= 1000:
+                logging.error(f'error: hit max workflow results', repo=self.name(), created=m, branch=branch)
+
         all:list[WorkflowRun] = [run for run in runs]
+        logging.info(f'found [{len(all)}] total workflows', repo=self.name(), start=start, end=end)
         return all
 
     @timer
@@ -198,9 +224,9 @@ class GithubRepository:
         end (date):     End of the date range to query for
         """
         logging.debug('looking for workflow runs matching pattern', repo=self.name(), pattern=pattern, branch=branch, start=start, end=end)
-        date_range:str = f'{start}..{end}'
+        # date_range:str = f'{start}..{end}'
 
-        all:list[WorkflowRun] = self._get_workflow_runs(branch, date_range)
+        all:list[WorkflowRun] = self._get_workflow_runs(branch, start, end)
         found:list[dict[str,Any]] = self._parse_workflow_runs(all, pattern, start, end)
 
         logging.debug('finished workflow runs', found=len(found), total=len(all), repo=self.name(), pattern=pattern, branch=branch, start=start, end=end)

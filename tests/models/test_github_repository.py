@@ -143,7 +143,7 @@ def test_models_GithubRepository_workflow_runs_success(
             repo, '_get_workflow_runs',
             return_value=fixture_workflow_runs_in_range(name=workflow, total=total, success=success, start=start, end=end, extras=extras)) :
             # fetch all runs
-            all_runs = repo._get_workflow_runs(workflow, 'main', f'{start}..{end}')
+            all_runs = repo._get_workflow_runs(workflow, 'main', start, end)
             # should have more
             assert len(all_runs) == (total + extras)
             # now prune

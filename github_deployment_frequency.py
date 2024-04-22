@@ -1,15 +1,16 @@
 import argparse
 import os
-from github import Github, Organization, Team
-from github.Repository import Repository
+import json
+from argparse import RawTextHelpFormatter
+from typing import Any
+from github import Github
+from github.Team import Team
 
 from gh.auth import init
 from metrics.github import deployment_frequency
 from log.logger import logging
-from argparse import RawTextHelpFormatter
-from converter.convert import to
 from utils.args import date_range_split, date_from_duration, github_organisation_and_team, github_repository_branch_workflow_list
-
+from reports.deployment_frequency import report
 
 from pprint import pp
 
@@ -30,6 +31,7 @@ def main() :
 
     ## args for which repositories
     repoconfig = parser.add_argument_group("Repositories to report on")
+
     repoconfig_mx = repoconfig.add_mutually_exclusive_group(required=True)
     repoconfig_mx.add_argument("--org-team",
                             help="Specify the organisation and team slugs (<org-slug>:<team-slug>)",
@@ -54,20 +56,27 @@ def main() :
                             organisation_slug=repoconfig['org'],
                             team_slug=repoconfig['team'])
         # get repos for team and covnert to same format used for listed versions
-        logging.warn("generating repo config from team repositories", team=team.name() )
+        logging.warn("generating repo config from team repositories", team=team.slug )
         repository_report_config = [{'repo':i.full_name, 'branch': i.default_branch, 'workflow':' live'}  for i in team.get_repos() ]
     else:
         g, _, _ = init(token=os.environ.get("GITHUB_ACCESS_TOKEN", None ) )
         repository_report_config = list(args.repo_branch_workflow)
 
-
-    data = deployment_frequency(repositories=repository_report_config,
+    data:dict[str, dict[str, dict[str,Any]]] = deployment_frequency(repositories=repository_report_config,
                                 start=date_range['start'],
                                 end=date_range['end'],
                                 g=g
                                 )
-    data['args'] = args.__dict__
-    pp(data)
+    data['meta']['args'] = args.__dict__
+    # dir to output to
+    dir:str = './outputs/raw/'
+    os.makedirs(dir, exist_ok=True)
+    # write raw json to file
+    rawfile:str = f'{dir}./github_deployment_frequency.json'
+    with open(rawfile, 'w+') as f:
+        json.dump(data, f, sort_keys=True, indent=2, default=str)
+
+    report(data)
 
 if __name__ == "__main__":
     main()
