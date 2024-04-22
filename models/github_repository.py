@@ -76,6 +76,7 @@ class GithubRepository:
             logging.warn('No workflow runs found, using proxy measure of pull requests', repo=self.name())
             data = self.pull_requests(branch, start, end)
 
+        logging.info(f'found [{len(data)}] total df measures in range [{self.name()}]', repo=self.name(), start=start, end=end)
 
         grouped:dict[str, list[dict[str,Any]]] = self._groupby(data, start, end)
         logging.debug('grouped results', grouped=grouped, repo=self.name())
@@ -119,6 +120,7 @@ class GithubRepository:
         logging.debug('calling github api for pull requests', repo=self.name())
         prs:PaginatedList[PullRequest] = self.r.get_pulls(base=branch, state=state, sort='merged_at', direction='desc')
         all:list[PullRequest] = [pr for pr in prs]
+        logging.info(f'found [{len(all)}] total pull requests', repo=self.name())
         return all
 
     @timer
@@ -174,13 +176,17 @@ class GithubRepository:
         runs:list[WorkflowRun] = []
         months = year_month_list(start, end)
         for m in months:
-            rloop:PaginatedList[WorkflowRun] = self.r.get_workflow_runs(branch=branch, created=m )
+            rloop:PaginatedList[WorkflowRun] = self.r.get_workflow_runs(branch=branch, created=f'{m}..{m}' )
             logging.debug(f'found [{rloop.totalCount}] workflows', repo=self.name(), created=m, branch=branch)
-            for run in rloop:
-                runs.append(run)
+
             # warn about api max numbers
             if rloop.totalCount >= 1000:
-                logging.error(f'error: hit max workflow results', repo=self.name(), created=m, branch=branch)
+                logging.error(f'error: hit max workflow results: [{rloop.totalCount}]', repo=self.name(), created=m, branch=branch)
+                for r in rloop:
+                    logging.debug(f'workflow: {r.id} - {r.created_at} [{r.display_title}]')
+
+            for run in rloop:
+                runs.append(run)
 
         all:list[WorkflowRun] = [run for run in runs]
         logging.info(f'found [{len(all)}] total workflows', repo=self.name(), start=start, end=end)

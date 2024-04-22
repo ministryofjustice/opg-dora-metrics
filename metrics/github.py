@@ -31,7 +31,7 @@ def deployment_frequency( repositories:list[dict[str,str]], start:date, end:date
         logging.debug('repository name', name=repo.name())
 
         df:dict[str, dict[str, Any]] = repo.deployment_frequency(start, end, conf.get('branch'), conf.get('workflow') )
-        logging.info(f'[{i+1}/{l}] deployment_frequency for repo', repo=repo.name(), df=df)
+        logging.info(f'[{i+1}/{l}] deployment_frequency for repo [{repo.name()}]', repo=repo.name(), df=df)
         # by repo name
         by_repository[repo.name()] = df
         # by teams - merge together
