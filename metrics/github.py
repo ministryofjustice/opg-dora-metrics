@@ -12,7 +12,9 @@ from log.logger import logging
 from pprint import pp
 
 @timer
-def deployment_frequency( repositories:list[dict[str,str]], start:date, end:date, g:Github) -> dict[str, dict[str, dict[str,Any]]]:
+def deployment_frequency(repositories:list[dict[str,str]],
+                        start:date, end:date,
+                        parent_team:str, g:Github) -> dict[str, dict[str, dict[str,Any]]]:
     """Fetch aggregated deployment information for all repositories passed"""
     logging.debug('deployment frequency data', repository_config=repositories)
 
@@ -35,7 +37,7 @@ def deployment_frequency( repositories:list[dict[str,str]], start:date, end:date
         # by repo name
         by_repository[repo.name()] = df
         # by teams - merge together
-        teams:list[Team] = repo.teams()
+        teams:list[Team] = repo.teams(parent_team)
         for month,values in df.items():
             for t in teams:
                 name:str = t.slug

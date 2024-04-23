@@ -49,11 +49,12 @@ class GithubRepository:
         return self.r.full_name
 
     @timer
-    def teams(self) -> list[Team]:
+    def teams(self, parent:str = 'opg') -> list[Team]:
         """Fetch all teams for this repo"""
         all:list[Team] = []
         for t in self.r.get_teams():
-            all.append(t)
+            if t.parent is not None and t.parent.slug == parent:
+                all.append(t)
         return all
     ############
     # Metrics
@@ -173,7 +174,7 @@ class GithubRepository:
         """Deals with the paginated list sand returns a normal list so there is no futher rate limiting etc"""
         logging.debug('calling github api for workflow runs', repo=self.name())
 
-        runs:list[WorkflowRun] = []
+        all:list[WorkflowRun] = []
         months = year_month_list(start, end)
         for m in months:
             rloop:PaginatedList[WorkflowRun] = self.r.get_workflow_runs(branch=branch, created=f'{m}..{m}' )
@@ -182,13 +183,13 @@ class GithubRepository:
             # warn about api max numbers
             if rloop.totalCount >= 1000:
                 logging.error(f'error: hit max workflow results: [{rloop.totalCount}]', repo=self.name(), created=m, branch=branch)
-                for r in rloop:
-                    logging.debug(f'workflow: {r.id} - {r.created_at} [{r.display_title}]')
+                for run in rloop:
+                    logging.debug(f'workflow: {run.id} - {run.created_at} [{run.display_title}]')
+                    all.append(run)
+            else:
+                for run in rloop:
+                    all.append(run)
 
-            for run in rloop:
-                runs.append(run)
-
-        all:list[WorkflowRun] = [run for run in runs]
         logging.info(f'found [{len(all)}] total workflows', repo=self.name(), start=start, end=end)
         return all
 

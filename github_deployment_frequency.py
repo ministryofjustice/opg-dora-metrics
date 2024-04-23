@@ -41,6 +41,11 @@ def main() :
                             help="Specify multiple repo-branch-workflow patterns (<repo-full-name>:<branch>:<workflow-name>)",
                             type=github_repository_branch_workflow_list)
 
+    parser.add_argument('--team-parent',
+                        help="Filter the team report to only include teams whose parent matches this slug (default: opg)",
+                        default="opg"
+                        )
+
     args = parser.parse_args()
 
     date_range = args.duration if args.duration is not None else args.date_range
@@ -57,7 +62,7 @@ def main() :
                             team_slug=repoconfig['team'])
         # get repos for team and covnert to same format used for listed versions
         logging.warn("generating repo config from team repositories", team=team.slug )
-        repository_report_config = [{'repo':i.full_name, 'branch': i.default_branch, 'workflow':' live'}  for i in team.get_repos() ]
+        repository_report_config = [{'repo':i.full_name, 'branch': i.default_branch, 'workflow':' live$'}  for i in team.get_repos() ]
     else:
         g, _, _ = init(token=os.environ.get("GITHUB_ACCESS_TOKEN", None ) )
         repository_report_config = list(args.repo_branch_workflow)
@@ -65,6 +70,7 @@ def main() :
     data:dict[str, dict[str, dict[str,Any]]] = deployment_frequency(repositories=repository_report_config,
                                 start=date_range['start'],
                                 end=date_range['end'],
+                                parent_team=args.team_parent,
                                 g=g
                                 )
     data['meta']['args'] = args.__dict__

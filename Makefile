@@ -25,7 +25,7 @@ tests:
 
 # Run a series of tests based on name, setup access token
 test:
-	export LOG_LEVEL=INFO pytest --log-cli-level=INFO -s --disable-warnings ./tests/ -k "$(names)"
+	env LOG_LEVEL=INFO pytest --log-cli-level=INFO -s --disable-warnings ./tests/ -k "$(names)"
 
 # run deployment frequency
 df:
