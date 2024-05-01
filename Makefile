@@ -4,8 +4,8 @@ ARCH := $(shell uname -m)
 HOST_ARCH := ${OS}_${ARCH}
 
 .DEFAULT_GOAL: all
-.PHONY: all requirements tests install
-.ONESHELL: all requirements tests install
+.PHONY: all requirements tests install df
+.ONESHELL: all requirements tests install df
 .EXPORT_ALL_VARIABLES:
 
 all: requirements install
@@ -21,8 +21,14 @@ install:
 
 # Run all tests
 tests:
-	pytest --log-cli-level=INFO --disable-warnings -s tests/
+	env LOG_LEVEL=WARN pytest --log-cli-level=INFO --disable-warnings ./tests/
 
-# Run all tests
+# Run a series of tests based on name, setup access token
 test:
-	pytest --log-cli-level=DEBUG --disable-warnings tests/ -s -k $(tests)
+	env LOG_LEVEL=INFO pytest --log-cli-level=INFO -s --disable-warnings ./tests/ -k "$(names)"
+
+# run deployment frequency
+df:
+	@env LOG_LEVEL=INFO env GITHUB_ACCESS_TOKEN="${GITHUB_TOKEN}" python ./github_deployment_frequency.py \
+		--org-team="ministryofjustice:opg" \
+		--duration=6

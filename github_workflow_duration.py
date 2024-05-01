@@ -1,5 +1,6 @@
 import argparse
 import os
+import logging
 from gh.auth import init
 from gh.workflows import workflow_total_durations
 from github import Github
@@ -8,13 +9,14 @@ from github.Repository import Repository
 
 
 def main() :
+    logging.basicConfig(level=os.environ.get('LOGLEVEL', 'INFO').upper())
     # handle args
     parser = argparse.ArgumentParser()
     parser.add_argument("--repository", help="Full name of the repository, including owner", required=True, type=str)
     parser.add_argument("--workflow", help="Workflow id to calculate the duration of", required=True, type=int)
     args = parser.parse_args()
     # setup auth
-    token = str( os.environ.get("GH_TOKEN", "" ))
+    token = str( os.environ.get("GITHUB_ACCESS_TOKEN", "" ))
     g:Github
     g, _, _ = init(token)
     # find the repo

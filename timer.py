@@ -1,9 +1,11 @@
 import os
 import argparse
+import logging
 from timer.stopwatch import start, stop, durations
 
 
 def main() :
+    logging.basicConfig(level=os.environ.get('LOGLEVEL', 'INFO').upper())
     # handle args
     parser = argparse.ArgumentParser()
     parser.add_argument("--start", help="Start timestamp (format: 2024-03-26T08:47:21.029473+00:00)", required=False, type=str)
