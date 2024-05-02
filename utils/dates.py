@@ -13,7 +13,7 @@ def human_duration(start:datetime, end:datetime) -> str:
 
     delta:relativedelta = relativedelta(end, start)
     l:list[str] = _readable(delta)
-    return ''.join(l)
+    return ' '.join(l)
 
 @timer
 def to_datetime(value:str, fmt:str = '%Y-%m') -> datetime:
