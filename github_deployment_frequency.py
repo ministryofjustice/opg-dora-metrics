@@ -75,10 +75,10 @@ def main() :
                                 )
     data['meta']['args'] = args.__dict__
     # dir to output to
-    dir:str = './outputs/raw/'
+    dir:str = './outputs/github_deployment_frequency/'
     os.makedirs(dir, exist_ok=True)
     # write raw json to file
-    rawfile:str = f'{dir}./github_deployment_frequency.json'
+    rawfile:str = f'{dir}./raw.json'
     with open(rawfile, 'w+') as f:
         json.dump(data, f, sort_keys=True, indent=2, default=str)
 
