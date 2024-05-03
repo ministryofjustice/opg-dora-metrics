@@ -30,7 +30,7 @@ Releases per month for each repository.
             {% endfor -%}
         </tr>
         <tr class="averages">
-            <td title='Average per weekday'>A</td>
+            <th title='Average per weekday'>A</th>
             {% for m in months -%}
             <td align='right' title="Average per weekday for {{ m }}">{{ item.get(m).get('average_success', 0) | round(2) }}</td>
             {% endfor -%}
