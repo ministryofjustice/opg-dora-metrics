@@ -22,15 +22,15 @@ Releases per month for each github team.
     {% for team, item in by_team.items() -%}
         <tr class="totals">
             <th align='left' rowspan="2" valign="top">{{ team }}</th>
-            <td>total:</td>
+            <th title='Total'>T</th>
             {% for m in months -%}
             <td align='right' title="Total for {{ m }}">{{ item.get(m).get('total_success', 0)  }}</td>
             {% endfor -%}
         </tr>
         <tr class="averages">
-            <td>average:</td>
+            <td title='Average per weekday'>A</td>
             {% for m in months -%}
-            <td align='right' title="Average per day for {{ m }}">{{ item.get(m).get('average_success', 0) | round(2) }}</td>
+            <td align='right' title="Average per weekday for {{ m }}">{{ item.get(m).get('average_success', 0) | round(2) }}</td>
             {% endfor -%}
         </tr>
     {% endfor -%}
