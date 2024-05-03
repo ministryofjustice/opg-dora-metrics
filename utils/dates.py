@@ -5,6 +5,17 @@ from log.logger import logging
 from utils.decorator import timer
 
 @timer
+def human_duration(start:datetime, end:datetime) -> str:
+    """"""
+    attrs:list[str] = ['years', 'months', 'days', 'hours', 'minutes', 'seconds']
+
+    _readable = lambda delta: ['%d %s' % (getattr(delta, attr), attr if getattr(delta, attr) > 1 else attr[:-1]) for attr in attrs if getattr(delta, attr)]
+
+    delta:relativedelta = relativedelta(end, start)
+    l:list[str] = _readable(delta)
+    return ' '.join(l)
+
+@timer
 def to_datetime(value:str, fmt:str = '%Y-%m') -> datetime:
     """Convert the date represented in value to a datetime using the format passed"""
     result:datetime = datetime.strptime(value, fmt)

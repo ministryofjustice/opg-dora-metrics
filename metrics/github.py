@@ -1,12 +1,13 @@
 import os
 from typing import Any
-from datetime import date
+from datetime import date, datetime, timezone
+from dateutil.relativedelta import relativedelta
 from github import Github
 from github.Team import Team
 
 from models.github_repository import GithubRepository
 from utils.decorator import timer
-from utils.dates import weekdays_in_month, to_date, year_month_list
+from utils.dates import weekdays_in_month, to_date, year_month_list, human_duration
 from log.logger import logging
 
 from pprint import pp
@@ -18,6 +19,7 @@ def deployment_frequency(repositories:list[dict[str,str]],
     """Fetch aggregated deployment information for all repositories passed"""
     logging.debug('deployment frequency data', repository_config=repositories)
 
+    start_time:datetime = datetime.now(timezone.utc)
     # all the freq info
     all:dict[str, dict[str, Any]] = {}
     # stat items
@@ -59,15 +61,20 @@ def deployment_frequency(repositories:list[dict[str,str]],
             for k, v in values.items():
                 all[key][k] = all[key].get(k, 0) + v
 
+    end_time:datetime = datetime.now(timezone.utc)
+    duration = human_duration(start_time, end_time)
 
     response:dict[str, dict[str, dict[str,Any]]] = {
         'meta': {
-            'start': start.isoformat(),
-            'end': end.isoformat(),
             'repositories': repository_names,
             'weekdays': weekdays,
             'months': year_month_list(start, end),
             'teams': list(by_team.keys()),
+            'execution_time': {
+                'start': start_time.isoformat(),
+                'end': end_time.isoformat(),
+                'duration': duration,
+            }
         },
         'by_month': all,
         'by_repository': by_repository,
