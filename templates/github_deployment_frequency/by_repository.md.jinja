@@ -32,7 +32,7 @@ Releases per month for each repository.
             </th>
             {% for m in months -%}
             <td align='right' title="Total for {{ m }}">{{ item.get(m).get('total_success', 0)  }}</td>
-            <td align='right' title="Average per weekday for {{ m }}">{{ item.get(m).get('average_success', 0) | round(2) }}</td>
+            <td align='right' title="Average per weekday for {{ m }}">{{ "%0.1f" | format(item.get(m).get('average_success', 0.0)  ) }}</td>
             {% endfor -%}
         </tr>
 
@@ -41,7 +41,7 @@ Releases per month for each repository.
             <th align='left' >OVERALL</th>
             {% for m in months -%}
             <td align='right' title="Total for {{ m }}" >{{ totals.get(m).get('total_success', 0)  }}</td>
-            <td align='right' title="Average per day for {{ m }}">{{ totals.get(m).get('average_success', 0) | round(2) }}</td>
+            <td align='right' title="Average per day for {{ m }}">{{ "%0.1f" | format(totals.get(m).get('average_success', 0.0)) }}</td>
             {% endfor -%}
         </tr>
     </tbody>
