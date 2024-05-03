@@ -12,12 +12,12 @@ def _by_month(by_month:dict[str, dict[str,Any]], duration:str=None):
 
     loader:FileSystemLoader = FileSystemLoader(_templates)
     env:Environment = Environment(loader=loader)
-    template:Template = env.get_template('by_month.erb')
+    template:Template = env.get_template('by_month.md.jinja')
 
     t:str = datetime.utcnow().strftime('%Y-%m-%d')
     output:str = template.render(now=t, by_month=by_month, duration=duration)
     os.makedirs(_path, exist_ok=True)
-    with open(f'{_path}by_month.md', 'w+') as f:
+    with open(f'{_path}by_month.html.md.erb', 'w+') as f:
         f.write(output)
 
 
@@ -25,12 +25,12 @@ def _by_repository(by_repo:dict[str, dict[str,Any]], months:list[str], totals:di
     """generate markdown / html mix for repo per month"""
     loader:FileSystemLoader = FileSystemLoader(_templates)
     env:Environment = Environment(loader=loader)
-    template:Template = env.get_template('by_repository.erb')
+    template:Template = env.get_template('by_repository.md.jinja')
 
     t:str = datetime.utcnow().strftime('%Y-%m-%d')
     output:str = template.render(now=t, by_repo=by_repo, months=months, totals=totals, duration=duration)
     os.makedirs(_path, exist_ok=True)
-    with open(f'{_path}by_repository.md', 'w+') as f:
+    with open(f'{_path}by_repository.html.md.erb', 'w+') as f:
         f.write(output)
 
 
@@ -40,12 +40,12 @@ def _by_teams(by_team:dict[str, dict[str,Any]], months:list[str], duration:str=N
 
     loader:FileSystemLoader = FileSystemLoader(_templates)
     env:Environment = Environment(loader=loader)
-    template:Template = env.get_template('by_team.erb')
+    template:Template = env.get_template('by_team.md.jinja')
 
     t:str = datetime.utcnow().strftime('%Y-%m-%d')
     output:str = template.render(now=t, by_team=by_team, months=months, duration=duration)
     os.makedirs(_path, exist_ok=True)
-    with open(f'{_path}by_team.md', 'w+') as f:
+    with open(f'{_path}by_team.html.md.erb', 'w+') as f:
         f.write(output)
 
 

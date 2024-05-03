@@ -5,23 +5,23 @@ review_in: 3 months
 ---
 # <%= current_page.data.title %>
 
-Releases per month for each github team.
+Releases per month for each repository.
 
 *Published on {{ now }} in {{ duration }}*
 
 <table class='dataframe'>
     <thead>
         <tr>
-            <th align='left'>Team</th>
+            <th align='left'>Repository</th>
             {% for month in months -%}
             <td align='right'>{{ month  }}</td>
             {% endfor -%}
         </tr>
     </thead>
     <tbody>
-    {% for team, item in by_team.items() -%}
+    {% for repo, item in by_repo.items() -%}
         <tr class="totals">
-            <th align='left' rowspan="2" valign="top">{{ team }}</th>
+            <th align='left' rowspan="2" valign="top"><a href='https://github.com/{{ repo }}'>{{ repo }}</a></th>
             {% for m in months -%}
             <td align='right' title="Total for {{ m }}">{{ item.get(m).get('total_success', 0)  }}</td>
             {% endfor -%}
@@ -32,6 +32,20 @@ Releases per month for each github team.
             {% endfor -%}
         </tr>
     {% endfor -%}
+        <tr>
+            <th align='left'>TOTALS</th>
+            {% for m in months -%}
+            <td align='right' title="Total for {{ m }}" >{{ totals.get(m).get('total_success', 0)  }}</td>
+            {% endfor -%}
+        </tr>
+        <tr>
+        <th align='left'>AVERAGE PER DAY</th>
+        {% for m in months -%}
+        <td align='right' title="Average per day for {{ m }}">{{ totals.get(m).get('average_success', 0) | round(2) }}</td>
+        {% endfor -%}
     </tr>
     </tbody>
 </table>
+
+
+*Created by [opg-dora-metrics](https://github.com/ministryofjustice/opg-dora-metrics)*
