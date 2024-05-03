@@ -12,7 +12,7 @@ Releases per month for each github team.
 <table class='dataframe'>
     <thead>
         <tr>
-            <th align='left'>Team</th>
+            <th align='left' colspan='2'>Team</th>
             {% for month in months -%}
             <td align='right'>{{ month  }}</td>
             {% endfor -%}
@@ -22,11 +22,13 @@ Releases per month for each github team.
     {% for team, item in by_team.items() -%}
         <tr class="totals">
             <th align='left' rowspan="2" valign="top">{{ team }}</th>
+            <td>total:</td>
             {% for m in months -%}
             <td align='right' title="Total for {{ m }}">{{ item.get(m).get('total_success', 0)  }}</td>
             {% endfor -%}
         </tr>
         <tr class="averages">
+            <td>average:</td>
             {% for m in months -%}
             <td align='right' title="Average per day for {{ m }}">{{ item.get(m).get('average_success', 0) | round(2) }}</td>
             {% endfor -%}
