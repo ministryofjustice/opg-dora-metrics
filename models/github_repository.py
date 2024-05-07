@@ -1,7 +1,6 @@
 import re
-from typing import Any, Callable
+from typing import Any
 from datetime import date
-from dateutil.relativedelta import relativedelta
 
 from github import Github
 from github.PaginatedList import PaginatedList
@@ -13,7 +12,6 @@ from github.Team import Team
 from converter.convert import to, remapper
 from log.logger import logging
 from utils.decorator import timer
-
 from utils.dates import between, year_month_list, weekdays_in_month, to_date
 from utils.group import group, range_fill
 from utils.total import totals
@@ -37,6 +35,7 @@ class GithubRepository:
         self.slug = slug
         self.r = self._repo()
         logging.debug('found repository', slug=slug)
+        self.standards = _Standards(g, self.r)
 
     @timer
     def _repo(self) -> Repository:
@@ -56,12 +55,13 @@ class GithubRepository:
             if t.parent is not None and t.parent.slug == parent:
                 all.append(t)
         return all
+
     ############
     # Metrics
     ############
 
     @timer
-    def deployment_frequency(self, start:date, end:date, branch:str='main', workflow_pattern:str = ' live'):
+    def deployment_frequency(self, start:date, end:date, branch:str='main', workflow_pattern:str = ' live') -> dict[str, dict[str,Any]]:
         """Measure the number of github action workflow runs (success and failures) between the date range specified
         as part of DORA style reporting.
 
@@ -238,3 +238,95 @@ class GithubRepository:
 
         logging.debug('finished workflow runs', found=len(found), total=len(all), repo=self.name(), pattern=pattern, branch=branch, start=start, end=end)
         return found
+
+
+
+class _Workflows:
+    """Handle all things relating to workflows"""
+
+
+class _Standards:
+    """Handle all the complance related methods and data gathering"""
+    g:Github = None
+    slug:str = None
+    r:Repository = None
+
+    def __init__(self, g:Github, r:Repository) -> None:
+        self.g = g
+        self.r = r
+
+    @timer
+    def _baseline(self) -> dict[str, Any]:
+        """Baseline standards that ops-eng also report on"""
+        base:dict[str,Any] = {
+            'Default branch is called main': self._has_default_branch_main(),
+            'Default branch is protected': self._has_default_branch_protected(),
+            'Issues are enabled': self._has_issues_enabled(),
+            'Rules enforced for admins': self._has_enforced_for_admins(),
+            'Requires code owner approval': self._has_required_code_owner_reviews(),
+            'Requires approval': self._has_requires_approval_review_count(),
+            'Has a description': self._has_description(),
+            'Has a license': ' '.join(self._has_license())
+        }
+        return base
+
+
+    @timer
+    def _has_default_branch_main(self) -> bool:
+        return self.r.default_branch == 'main'
+
+    @timer
+    def _has_default_branch_protected(self) -> bool:
+        return self.r.get_branch(self.r.default_branch).protected
+
+    @timer
+    def _has_description(self) -> bool:
+        return self.r.description != ''
+
+    @timer
+    def _has_issues_enabled(self) -> bool:
+        return self.r.has_issues
+
+    @timer
+    def _has_requires_approval_review_count(self) -> bool:
+        count:int = 0
+        try:
+            branch = self.r.get_branch(self.r.default_branch)
+            settings = branch.get_required_pull_request_reviews()
+            count = settings.required_approving_review_count
+        except Exception as e:
+            count = 0
+        return (count > 0)
+
+    @timer
+    def _has_enforced_for_admins(self) -> bool:
+        status:bool = False
+        try:
+            branch = self.r.get_branch(self.r.default_branch)
+            status = branch.get_admin_enforcement()
+        except Exception as e:
+            return False
+        return status
+
+    @timer
+    def _has_required_code_owner_reviews(self) -> bool:
+        status:bool = False
+        try:
+            branch = self.r.get_branch(self.r.default_branch)
+            settings = branch.get_required_pull_request_reviews()
+            status = settings.require_code_owner_reviews
+        except Exception as e:
+            return False
+        return status
+
+    @timer
+    def _has_license(self) -> tuple[bool, str]:
+        status:bool = False
+        name:str = ''
+        try:
+            license = self.r.get_license()
+            name = license.license.name
+            status = len(name) > 0
+        except Exception as e:
+            return False, ""
+        return status, f'({name})'

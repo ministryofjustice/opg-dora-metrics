@@ -1,3 +1,4 @@
+import os
 import pytest
 import random
 from typing import Any
@@ -5,7 +6,6 @@ from datetime import date, timedelta
 from unittest.mock import patch
 
 from faker import Faker
-
 from github import Github
 from github.PullRequest import PullRequest
 from github.WorkflowRun import WorkflowRun
@@ -14,7 +14,8 @@ from github.Repository import Repository
 from models.github_repository import GithubRepository
 from converter.convert import to, remapper
 from log.logger import logging
-from utils.dates import between, to_date, to_datetime
+from utils.dates import between, to_datetime
+from gh.auth import init
 
 from tests.factory import faux
 
@@ -242,3 +243,23 @@ def test_models_GithubRepository_deployment_frequency_no_workflows(
                 avg = repo._averages(totals)
                 # all months should be present for all
                 assert len(avg.keys()) == len(totals.keys()) == len(grouped.keys())
+
+@pytest.mark.parametrize(
+        "slug",
+        [
+            ("ministryofjustice/opg-lpa")
+        ]
+)
+@pytest.mark.skipif(os.environ.get('GITHUB_TOKEN', 0) == 0, reason='Requires github token to run'  )
+def test_models_GithubRepository_standards(slug:str):
+    """Test the repository flags are all returned as expected"""
+    g, _, _  = init(os.environ.get('GITHUB_TOKEN'))
+    repo = GithubRepository(g, slug)
+    assert repo.standards._has_issues_enabled() == True
+    assert repo.standards._has_default_branch_main() == True
+    assert repo.standards._has_description() == True
+    assert repo.standards._has_default_branch_main() == True
+    assert repo.standards._has_requires_approval_review_count() == True
+    assert repo.standards._has_enforced_for_admins() == True
+    assert repo.standards._has_required_code_owner_reviews() == True
+    assert repo.standards._has_license() == (True, '(MIT License)')
