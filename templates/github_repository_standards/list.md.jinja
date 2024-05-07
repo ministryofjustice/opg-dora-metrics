@@ -25,35 +25,44 @@ Lists both public and private MoJ GitHub repositories which are and are not full
 <table style='width:100%' class='compliance-table' id='dataset'>
     <tr>
         <th colspan='2'></th>
-        <th title='Baseline compliance' align='center'>B</th>
-        <th title='Extended compliance' align='center'>E</th>
+        <th title='Baseline compliance' style='text-align:center'>B</th>
+        <th title='Extended compliance' style='text-align:center'>E</th>
     </tr>
     {% for k, item in data['compliance'].items() -%}
     <tr>
-        <td class="expand " rowspan='2'>
+        <td class="expand " rowspan='3' valign='top'>
             <strong data-toggle='detail-{{ item['_name'] }}' class="toggler govuk-tag govuk-tag--blue" style='display:block; width:20px; text-align:center; cursor:pointer' title='Show/Hide details'>+</strong>
         </td>
         <th style='width:88%; border-bottom-width:0;'>
             <a href='https://github.com/{{ k }}' class="toggler govuk-link govuk-task-list__link">{% if item['_archived']%}(ARCHIVED) {% endif %}{{ item['_name'] }}</a>
         </th>
-        <td rowspan='2'>
+        <td rowspan='3' valign='top'>
             {% if item['_baseline'] -%}
             <strong class="govuk-tag govuk-tag--green" style='display:block; width:20px; text-align:center;' title='baseline compliance passed'>✓</strong>
             {% else -%}
             <strong class="govuk-tag govuk-tag--red" style='display:block; width:20px; text-align:center;' title='baseline compliance failed'>X</strong>
             {% endif %}
         </td>
-        <td rowspan='2'>
+        <td rowspan='3' valign='top'>
             {% if item['_extended'] -%}
             <strong class="govuk-tag govuk-tag--green" style='display:block; width:20px; text-align:center;' title='extended compliance passed'>✓</strong>
             {% else -%}
             <strong class="govuk-tag govuk-tag--red" style='display:block; width:20px; text-align:center;' title='extended compliance failed'>X</strong>
             {% endif %}
         </td>
-
     </tr>
     <tr class='details'>
-        <td style='display:none;' id='detail-{{ item['_name'] }}'>
+        <td style='display:none;' class='detail-{{ item['_name'] }}'>
+            {% for attr, val in item.items() -%}
+                {% if '__' in attr -%}
+                <strong class='govuk-tag govuk-tag--grey' style='margin-bottom:5px; margin-right:5px; font-size:0.7rem; background-color:transparent;width:310px;'>{{ attr | replace('__', '') }}:</strong>
+                <strong class='govuk-tag govuk-tag--grey' style='margin-bottom:5px; margin-right:5px; font-size:0.7rem;background-color:transparent;width:200px;text-align:right'>{{ val }}</strong>
+                {% endif -%}
+            {% endfor %}
+        </td>
+    </td>
+    <tr class='details'>
+        <td style='display:none;' class='detail-{{ item['_name'] }}'>
             {% for attr, val in item.items() -%}
                 {% if attr[0] == '_' -%}
                 {% elif attr == 'License type' -%}
@@ -79,12 +88,16 @@ Lists both public and private MoJ GitHub repositories which are and are not full
 [].forEach.call( document.querySelectorAll( ".toggler" ), function ( ele ) {
     ele.addEventListener('click', function(eve){
         var toggleDisplay = eve.target.dataset.toggle;
-        var info = document.querySelector('#'+toggleDisplay);
-        if (info.style.display == 'none') {
-            info.style.display = 'block'
-        } else {
-            info.style.display = 'none'
-        }
+
+        [].forEach.call( document.querySelectorAll('.'+toggleDisplay), function(info) {
+            if (info.style.display == 'none') {
+                info.style.display = 'block'
+            } else {
+                info.style.display = 'none'
+            }
+            return false
+        })
+
         return false
     }, false)
 } )
