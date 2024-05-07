@@ -14,7 +14,7 @@ The portfolio function within MoJ request a top level number of production relea
 
 As the workflow api has limited filtering abilities, all workflows within a time period are retrieved. The API has an uppoer limit of 1000 per request, so to reduce the odds of data being limited each month is called indvidually. This can cause the generation to be slow.
 
-Output from this report is stored at `./outputs/github_deployment_frequency/*` and should contain `raw.json` and a series of markdown files which can then be pushblised by our documentation site.
+Output from this report is stored at `./outputs/github_deployment_frequency/*` and should contain `raw.json` and a series of markdown files which can then be published by our documentation site.
 
 There are markdown files for releases per month overall, releases per month per team (github team) and releases per month per repository. Each of these include the total and average per weekday.
 
@@ -22,7 +22,18 @@ For example usage, please check the make targets `github_deployment_frequency_by
 
 *Note: This command does require a github auth token to run*
 
+### GitHub Repository Standards
+
+Checks a series of provided repositories against our agreed MoJ standards and an additional set we utilise in OPG.
+
+`github_repository_standards.py` iterates over repositories, gathers information on each compared to the statndards required and tracks if they have passed each type and each category (baseline / extended).
+
+A json file along with a markdown file are generated as the output and found in `./outputs/github_repository_standards/*` which are then published to our technical documentiona site.
+
+For example usage, please check the make targets `github_repository_standards_by_list` and `github_repository_standards_by_org` or for more details run `python ./github_repository_standards.py --help`
+
+*Note: This command does require a github auth token to run*
 
 ## Testing
 
-All tests are run within github workflows and you can run them directly via `make tests` or pick a particualr set using `make test names=${PATTERN}`.
+All tests are run within github workflows and you can run them directly via `make tests` or pick a particular set using `make test names=${PATTERN}`.
