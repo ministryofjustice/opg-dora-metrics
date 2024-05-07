@@ -20,16 +20,16 @@ Lists both public and private MoJ GitHub repositories which are and are not full
         </th>
         <td rowspan='2'>
             {% if item['_baseline'] -%}
-            <strong class="govuk-tag govuk-tag--green" style='display:block; width:20px; text-align:center;'>✓</strong>
+            <strong class="govuk-tag govuk-tag--green" style='display:block; width:20px; text-align:center;' title='baseline compliance passed'>✓</strong>
             {% else -%}
-            <strong class="govuk-tag govuk-tag--red" style='display:block; width:20px; text-align:center;'>X</strong>
+            <strong class="govuk-tag govuk-tag--red" style='display:block; width:20px; text-align:center;' title='baseline compliance failed'>X</strong>
             {% endif %}
         </td>
         <td rowspan='2'>
             {% if item['_extended'] -%}
-            <strong class="govuk-tag govuk-tag--green" style='display:block; width:20px; text-align:center;'>✓</strong>
+            <strong class="govuk-tag govuk-tag--green" style='display:block; width:20px; text-align:center;' title='extended compliance passed'>✓</strong>
             {% else -%}
-            <strong class="govuk-tag govuk-tag--red" style='display:block; width:20px; text-align:center;'>X</strong>
+            <strong class="govuk-tag govuk-tag--red" style='display:block; width:20px; text-align:center;' title='extended compliance failed'>X</strong>
             {% endif %}
         </td>
 
@@ -38,6 +38,8 @@ Lists both public and private MoJ GitHub repositories which are and are not full
         <td style='display:none;' id='detail-{{ item['_name'] }}'>
             {% for attr, val in item.items() -%}
                 {% if attr[0] == '_' -%}
+                {% elif attr == 'License type' -%}
+                <strong class="govuk-tag govuk-tag--yellow" style='margin-bottom:5px; margin-right:5px; font-size:0.7rem;'>{{ attr }}: {{ val }}</strong>
                 {% elif val -%}
                 <strong class="govuk-tag govuk-tag--green" style='margin-bottom:5px; margin-right:5px; font-size:0.7rem;'>{{ attr }}</strong>
                 {% else -%}

@@ -10,7 +10,7 @@ _templates:str = './templates/github_repository_standards/'
 
 
 def _list(data:dict[str, dict[str, dict[str,Any]]],  duration:str=None):
-    """"""
+    """Generate a list of all issues"""
     loader:FileSystemLoader = FileSystemLoader(_templates)
     env:Environment = Environment(loader=loader)
     template:Template = env.get_template('list.md.jinja')
