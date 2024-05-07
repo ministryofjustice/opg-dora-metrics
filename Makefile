@@ -1,6 +1,6 @@
 .DEFAULT_GOAL: all
-.PHONY: all requirements tests install github_deployment_frequency_by_org github_deployment_frequency_by_list github_repository_standards
-.ONESHELL: all requirements tests install github_deployment_frequency_by_org github_deployment_frequency_by_list github_repository_standards
+.PHONY: all requirements tests install github_deployment_frequency_by_org github_deployment_frequency_by_list github_repository_standards_by_list github_repository_standards_by_org
+.ONESHELL: all requirements tests install github_deployment_frequency_by_org github_deployment_frequency_by_list github_repository_standards_by_list github_repository_standards_by_org
 .EXPORT_ALL_VARIABLES:
 
 all: requirements install
@@ -28,10 +28,17 @@ test:
 ################
 
 # repository standards
-github_repository_standards:
+github_repository_standards_by_list:
 	@env LOG_LEVEL=INFO env GITHUB_ACCESS_TOKEN="${GITHUB_TOKEN}" python ./github_repository_standards.py \
 		--repository="ministryofjustice/opg-digideps" \
-		--repository="ministryofjustice/opg-lpa"
+		--repository="ministryofjustice/opg-lpa" \
+		--repository="ministryofjustice/opg-data-lpa-codes" \
+		--repository="ministryofjustice/opg-weblate"
+
+github_repository_standards_by_org:
+	@env LOG_LEVEL=INFO env GITHUB_ACCESS_TOKEN="${GITHUB_TOKEN}" python ./github_repository_standards.py \
+		--org-team="ministryofjustice:opg"
+
 
 # deployment frequency examples
 github_deployment_frequency_by_org:

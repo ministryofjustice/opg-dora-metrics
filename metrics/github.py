@@ -20,6 +20,8 @@ def standards_compliance(repositories:list[str], g:Github) -> dict[str, dict[str
     start_time:datetime = datetime.now(timezone.utc)
 
     compliance:dict[str, dict[str,Any]] = {}
+    base:int = 0
+    extended:int = 0
     l:int = len(repositories)
     for i, slug in enumerate(repositories):
         logging.debug('getting standards_compliance for repo', repository_name=slug)
@@ -28,6 +30,8 @@ def standards_compliance(repositories:list[str], g:Github) -> dict[str, dict[str
         comp['_name'] = repo.name.replace('ministryofjustice/', '')
         compliance[repo.name] = comp
         logging.info(f'[{i+1}/{l}] standards_compliant for repo [{repo.name}]', repo=repo.name, compliance=comp)
+        base += 1 if comp['_baseline'] is True else 0
+        extended += 1 if comp['_extended'] is True else 0
 
     end_time:datetime = datetime.now(timezone.utc)
     duration = human_duration(start_time, end_time)
@@ -39,7 +43,12 @@ def standards_compliance(repositories:list[str], g:Github) -> dict[str, dict[str
                 'start': start_time.isoformat(),
                 'end': end_time.isoformat(),
                 'duration': duration,
-            }
+            },
+            'compliance_rates': {
+                'baseline': base,
+                'extended': extended,
+                'total': len(repositories)
+            },
         },
         'compliance': compliance
     }

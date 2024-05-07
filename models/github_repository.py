@@ -48,6 +48,7 @@ class _Standards:
         base:dict[str, Any] = self.baseline()
         extras:dict[str,Any] = self.extended()
         base.update(extras)
+        base['_archived'] = self.r.archived
         return base
 
     @timer
@@ -59,7 +60,6 @@ class _Standards:
             'Default branch is protected': self.default_branch_is_protected(),
             'Issues are enabled': self.has_issues_enabled(),
             'Rules enforced for admins': self.rules_enforced_for_admins(),
-            'Requires code owner approval': self.requires_code_owner_reviews(),
             'Requires approval': self.approval_review_count_greater_than_zero(),
             'Has a description': self.has_description(),
             'Has a license': l,
@@ -76,6 +76,7 @@ class _Standards:
     def extended(self) -> dict[str, Any]:
         """Extra elements to check for"""
         extras:dict[str, Any] = {
+            'Requires code owner approval': self.requires_code_owner_reviews(),
             'Vulnerability alerts are enabled': self.r.get_vulnerability_alert(),
             'Code owners is in .github folder': self._has_file('./.github/CODEOWNERS'),
             'Readme is present': self._has_file('./README.md'),
