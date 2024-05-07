@@ -11,7 +11,7 @@ from github.PullRequest import PullRequest
 from github.WorkflowRun import WorkflowRun
 from github.Repository import Repository
 
-from models.github_repository import GithubRepository
+from models.github_repository import GithubRepository, _Workflows
 from converter.convert import to, remapper
 from log.logger import logging
 from utils.dates import between, to_datetime
@@ -111,7 +111,7 @@ def test_models_GithubRepository_init_success(slug:str, fixture_repository):
         repo = GithubRepository(g, slug)
         assert repo.r.id == 111
         assert repo.r.full_name == slug
-        assert repo.name() == slug
+        assert repo.name == slug
 
 
 @pytest.mark.parametrize(
@@ -136,19 +136,18 @@ def test_models_GithubRepository_workflow_runs_success(
         g:Github = Github()
         repo = GithubRepository(g, slug)
         assert repo.r.full_name == slug
-        # patch this instance of GithubRepository _get_workflow_runs to return series of mocked data
-        # via the return_value
-        # always have 2 extra that are outside of data range
+
+        # patch the get method for workflows class
         extras:int = 2
-        with patch.object(
-            repo, '_get_workflow_runs',
+        with patch(
+            'models.github_repository._Workflows._get',
             return_value=fixture_workflow_runs_in_range(name=workflow, total=total, success=success, start=start, end=end, extras=extras)) :
             # fetch all runs
-            all_runs = repo._get_workflow_runs(workflow, 'main', start, end)
+            all_runs = repo.workflows()._get(workflow, 'main', start, end)
             # should have more
             assert len(all_runs) == (total + extras)
             # now prune
-            in_range = repo._parse_workflow_runs(all_runs, workflow, start, end )
+            in_range = repo.workflows()._parse(all_runs, workflow, start, end )
             # should have x in range
             assert len(in_range) == total
             # get just the successful runs
@@ -181,16 +180,16 @@ def test_models_GithubRepository_pull_requests(
         assert repo.r.full_name == slug
 
         # patch the instance we created
-        with patch.object(
-            repo, '_get_pull_requests',
+        with patch(
+            'models.github_repository._PullRequests._get',
             return_value= fixture_prs_in_range(branch=branch, start=start, end=end, number_to_be_in_range=inrange)
             ) :
-            all = repo._get_pull_requests(branch)
+            all = repo.pull_requests()._get(branch)
             # should have more than asked for
             assert (len(all) >= inrange) == True
 
             # reduce to juse in range
-            found = repo._parse_pull_requests(all, branch, start, end)
+            found = repo.pull_requests()._parse(all, branch, start, end)
             # check matches
             assert len(found) == inrange
 
@@ -215,23 +214,23 @@ def test_models_GithubRepository_deployment_frequency_no_workflows(
         # check name
         assert repo.r.full_name == slug
         # force the workflow runs to be empty and therefore call the merge count
-        with patch('models.github_repository.GithubRepository.workflow_runs', return_value=[]):
+        with patch('models.github_repository._Workflows.runs', return_value=[]):
             # replace the pull request data with fixture data
-            with patch.object(
-                repo, 'pull_requests',
+            with patch(
+                'models.github_repository._PullRequests.prs',
                 return_value=fixture_pr_items(branch=branch, start=start, end=end, count=total)):
                 # now test the segments of the deployment frequency setup
-                data:list[dict] = repo.pull_requests(branch, start, end, 'closed')
+                data:list[dict] = repo.pull_requests().prs(branch, start, end, 'closed')
 
                 # check the grouping is all in range
-                grouped = repo._groupby(data, start, end)
+                grouped = repo.metrics().groupby(data, start, end)
                 for ym, d in grouped.items():
                     assert between ( to_datetime(ym) , start, end) == True
 
                 # check the totals match
                 count = 0
                 success = 0
-                totals = repo._totals(grouped, 'status')
+                totals = repo.metrics().totals(grouped, 'status')
 
                 for ym, data in totals.items():
                     count += data.get('total', 0)
@@ -240,7 +239,7 @@ def test_models_GithubRepository_deployment_frequency_no_workflows(
                 # - as these are pull requests, they should all be a success
                 assert total == count == success
                 # check the averages
-                avg = repo._averages(totals)
+                avg = repo.metrics().averages(totals)
                 # all months should be present for all
                 assert len(avg.keys()) == len(totals.keys()) == len(grouped.keys())
 
@@ -255,11 +254,11 @@ def test_models_GithubRepository_standards(slug:str):
     """Test the repository flags are all returned as expected"""
     g, _, _  = init(os.environ.get('GITHUB_TOKEN'))
     repo = GithubRepository(g, slug)
-    assert repo.standards._has_issues_enabled() == True
-    assert repo.standards._has_default_branch_main() == True
-    assert repo.standards._has_description() == True
-    assert repo.standards._has_default_branch_main() == True
-    assert repo.standards._has_requires_approval_review_count() == True
-    assert repo.standards._has_enforced_for_admins() == True
-    assert repo.standards._has_required_code_owner_reviews() == True
-    assert repo.standards._has_license() == (True, '(MIT License)')
+    assert repo.standards().default_branch_is_main() == True
+    assert repo.standards().default_branch_is_protected() == True
+    assert repo.standards().has_issues_enabled() == True
+    assert repo.standards().approval_review_count_greater_than_zero() == True
+    assert repo.standards().has_description() == True
+    assert repo.standards().rules_enforced_for_admins() == True
+    assert repo.standards().requires_code_owner_reviews() == True
+    assert repo.standards().has_license() == (True, '(MIT License)')
