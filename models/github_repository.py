@@ -32,8 +32,28 @@ class _Standards:
         self.name = name
 
     @timer
+    def _has_file(self, filepath:str) -> bool:
+        """Check the file path exists and has content"""
+        try:
+            found = self.r.get_contents(filepath)
+            return True
+        except:
+            return False
+        return False
+
+    @timer
+    def compliant(self) -> dict[str, Any]:
+        """Check the repo is compliant against base line and extended standards"""
+
+        base:dict[str, Any] = self.baseline()
+        extras:dict[str,Any] = self.extended()
+        base.update(extras)
+        return base
+
+    @timer
     def baseline(self) -> dict[str, Any]:
         """Baseline standards that ops-eng also report on"""
+        l, lname = self.has_license()
         base:dict[str,Any] = {
             'Default branch is called main': self.default_branch_is_main(),
             'Default branch is protected': self.default_branch_is_protected(),
@@ -42,9 +62,32 @@ class _Standards:
             'Requires code owner approval': self.requires_code_owner_reviews(),
             'Requires approval': self.approval_review_count_greater_than_zero(),
             'Has a description': self.has_description(),
-            'Has a license': ' '.join(self.has_license())
+            'Has a license': l,
+            'License type': lname
         }
+        overall:bool = True
+        for k,v in base.items():
+            if v is False:
+                overall = False
+        base['_baseline'] = overall
         return base
+
+    @timer
+    def extended(self) -> dict[str, Any]:
+        """Extra elements to check for"""
+        extras:dict[str, Any] = {
+            'Vulnerability alerts are enabled': self.r.get_vulnerability_alert(),
+            'Code owners is in .github folder': self._has_file('./.github/CODEOWNERS'),
+            'Readme is present': self._has_file('./README.md'),
+            'Code of conduct is present': self._has_file('./CODE_OF_CONDUCT.md'),
+            'Contributing guide is present': self._has_file('./CONTRIBUTING.md'),
+        }
+        overall:bool = True
+        for k,v in extras.items():
+            if v is False:
+                overall = False
+        extras['_extended'] = overall
+        return extras
 
 
     @timer
@@ -105,7 +148,7 @@ class _Standards:
             status = len(name) > 0
         except Exception as e:
             return False, ""
-        return status, f'({name})'
+        return status, name
 
 
 class _PullRequests:
@@ -285,13 +328,10 @@ class _Metrics:
         )
 
 
-
-
-
 class GithubRepository:
     """GithubRepository provides a series of methods that wrap and process calls using the github sdk.
 
-    Main aim is to fetch metric values for a specific repository
+    Used for reports to fetch metrics, standards checking and similar
     """
     g:Github = None
     slug:str = None
@@ -350,6 +390,9 @@ class GithubRepository:
                 all.append(t)
         return all
 
+    ###############
+    # REPORTS
+    ###############
     @timer
     def deployment_frequency(self, start:date, end:date, branch:str='main', workflow_pattern:str = ' live') -> dict[str, dict[str,Any]]:
         """Measure the number of github action workflow runs (success and failures) between the date range specified
@@ -379,3 +422,8 @@ class GithubRepository:
         logging.debug('averages results', averages=averages, repo=self.name)
 
         return averages
+
+    @timer
+    def standards_compliant(self) -> dict[str, Any]:
+        """Fetch a dict determining a series of compliance checks have been met"""
+        return self.standards().compliant()

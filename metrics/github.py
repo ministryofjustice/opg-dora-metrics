@@ -12,6 +12,40 @@ from log.logger import logging
 
 from pprint import pp
 
+
+@timer
+def standards_compliance(repositories:list[str], g:Github) -> dict[str, dict[str, dict[str,Any]]]:
+    """Fetch stanards compliance checks for each repository passed"""
+    logging.debug('standards compliance data', repositories=repositories)
+    start_time:datetime = datetime.now(timezone.utc)
+
+    compliance:dict[str, dict[str,Any]] = {}
+    l:int = len(repositories)
+    for i, slug in enumerate(repositories):
+        logging.debug('getting standards_compliance for repo', repository_name=slug)
+        repo = GithubRepository(g, slug)
+        comp:dict[str,Any] = repo.standards_compliant()
+        comp['_name'] = repo.name.replace('ministryofjustice/', '')
+        compliance[repo.name] = comp
+        logging.info(f'[{i+1}/{l}] standards_compliant for repo [{repo.name}]', repo=repo.name, compliance=comp)
+
+    end_time:datetime = datetime.now(timezone.utc)
+    duration = human_duration(start_time, end_time)
+
+    response:dict[str, dict[str, dict[str,Any]]] = {
+        'meta': {
+            'repositories': repositories,
+            'execution_time': {
+                'start': start_time.isoformat(),
+                'end': end_time.isoformat(),
+                'duration': duration,
+            }
+        },
+        'compliance': compliance
+    }
+    return response
+
+
 @timer
 def deployment_frequency(repositories:list[dict[str,str]],
                         start:date, end:date,
@@ -31,13 +65,13 @@ def deployment_frequency(repositories:list[dict[str,str]],
     for i, conf in enumerate(repositories):
         logging.debug('getting deployment_frequency for repo', repository_name=conf.get('repo'))
         repo = GithubRepository(g, conf.get('repo'))
-        repository_names.append(repo.name())
-        logging.debug('repository name', name=repo.name())
+        repository_names.append(repo.name)
+        logging.debug('repository name', name=repo.name)
 
         df:dict[str, dict[str, Any]] = repo.deployment_frequency(start, end, conf.get('branch'), conf.get('workflow') )
-        logging.info(f'[{i+1}/{l}] deployment_frequency for repo [{repo.name()}]', repo=repo.name(), df=df)
+        logging.info(f'[{i+1}/{l}] deployment_frequency for repo [{repo.name}]', repo=repo.name, df=df)
         # by repo name
-        by_repository[repo.name()] = df
+        by_repository[repo.name] = df
         # by teams - merge together
         teams:list[Team] = repo.teams(parent_team)
         for month,values in df.items():

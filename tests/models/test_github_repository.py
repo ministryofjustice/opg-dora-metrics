@@ -261,4 +261,4 @@ def test_models_GithubRepository_standards(slug:str):
     assert repo.standards().has_description() == True
     assert repo.standards().rules_enforced_for_admins() == True
     assert repo.standards().requires_code_owner_reviews() == True
-    assert repo.standards().has_license() == (True, '(MIT License)')
+    assert repo.standards().has_license() == (True, 'MIT License')

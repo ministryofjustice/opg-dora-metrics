@@ -1,6 +1,6 @@
 .DEFAULT_GOAL: all
-.PHONY: all requirements tests install github_deployment_frequency_by_org github_deployment_frequency_by_list
-.ONESHELL: all requirements tests install github_deployment_frequency_by_org github_deployment_frequency_by_list
+.PHONY: all requirements tests install github_deployment_frequency_by_org github_deployment_frequency_by_list github_repository_standards
+.ONESHELL: all requirements tests install github_deployment_frequency_by_org github_deployment_frequency_by_list github_repository_standards
 .EXPORT_ALL_VARIABLES:
 
 all: requirements install
@@ -26,6 +26,12 @@ test:
 ################
 # EXAMPLE USAGE
 ################
+
+# repository standards
+github_repository_standards:
+	@env LOG_LEVEL=INFO env GITHUB_ACCESS_TOKEN="${GITHUB_TOKEN}" python ./github_repository_standards.py \
+		--repository="ministryofjustice/opg-digideps" \
+		--repository="ministryofjustice/opg-lpa"
 
 # deployment frequency examples
 github_deployment_frequency_by_org:
