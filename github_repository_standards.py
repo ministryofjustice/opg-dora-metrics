@@ -3,14 +3,12 @@ import os
 import json
 from argparse import RawTextHelpFormatter
 from typing import Any
-from github import Github
-from github.Team import Team
 
 from gh.auth import init
 from metrics.github import standards_compliance
 from log.logger import logging
 from utils.args import github_organisation_and_team
-
+from reports.standards_compliance import report
 from pprint import pp
 
 
@@ -57,6 +55,7 @@ def main() :
     with open(rawfile, 'w+') as f:
         json.dump(data, f, sort_keys=True, indent=2, default=str)
 
+    report(data)
 
 if __name__ == "__main__":
     main()

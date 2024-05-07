@@ -1,0 +1,74 @@
+---
+title: Repository standards
+last_reviewed_on: {{ now }}
+review_in: 3 months
+---
+# <%= current_page.data.title %>
+
+Lists both public and private MoJ GitHub repositories which are and are not fully compliant with [MoJ standards](https://user-guide.operations-engineering.service.justice.gov.uk/documentation/information/mojrepostandards.html) as a baseline and OPG extended requirements.
+
+*Published on {{ now }} in {{ duration }}*
+
+<table style='width:100%' class='compliance-table'>
+    {% for k, item in data['compliance'].items() -%}
+    <tr>
+        <td class='expand' rowspan='2'>
+            <strong data-toggle='detail-{{ item['_name'] }}' class="govuk-tag govuk-tag--blue" style='display:block; width:20px; text-align:center; cursor:pointer'>+</strong>
+        </td>
+        <th style='width:88%; border-bottom-width:0;'>
+            <a href='https://github.com/{{ k }}' class="govuk-link govuk-task-list__link">{{ item['_name'] }}</a>
+        </th>
+        <td rowspan='2'>
+            {% if item['_baseline'] -%}
+            <strong class="govuk-tag govuk-tag--green" style='display:block; width:20px; text-align:center;'>✓</strong>
+            {% else -%}
+            <strong class="govuk-tag govuk-tag--red" style='display:block; width:20px; text-align:center;'>X</strong>
+            {% endif %}
+        </td>
+        <td rowspan='2'>
+            {% if item['_extended'] -%}
+            <strong class="govuk-tag govuk-tag--green" style='display:block; width:20px; text-align:center;'>✓</strong>
+            {% else -%}
+            <strong class="govuk-tag govuk-tag--red" style='display:block; width:20px; text-align:center;'>X</strong>
+            {% endif %}
+        </td>
+
+    </tr>
+    <tr class='details'>
+        <td style='display:none;' id='detail-{{ item['_name'] }}'>
+            {% for attr, val in item.items() -%}
+                {% if attr[0] == '_' -%}
+                {% elif val -%}
+                <strong class="govuk-tag govuk-tag--green" style='margin-bottom:5px; margin-right:5px; font-size:0.7rem;'>{{ attr }}</strong>
+                {% else -%}
+                <strong class="govuk-tag govuk-tag--red" style='margin-bottom:5px; margin-right:5px; font-size:0.7rem;'>{{ attr }}</strong>
+                {% endif -%}
+            {% endfor %}
+        </td>
+    </tr>
+    {% endfor %}
+
+</table>
+
+
+*Created by [opg-dora-metrics](https://github.com/ministryofjustice/opg-dora-metrics)*
+
+
+<script>
+
+[].forEach.call( document.querySelectorAll( ".expand strong" ), function ( ele ) {
+    ele.addEventListener('click', function(eve){
+        var toggleDisplay = eve.target.dataset.toggle;
+        var info = document.querySelector('#'+toggleDisplay);
+        if (info.style.display == 'none') {
+            info.style.display = 'block'
+            eve.target.innerHTML = '-'
+        } else {
+            info.style.display = 'none'
+            eve.target.innerHTML = '+'
+        }
+        return false
+    }, false)
+} )
+
+</script>
