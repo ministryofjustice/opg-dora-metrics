@@ -56,19 +56,19 @@ class _Standards:
         """Baseline standards that ops-eng also report on"""
         l, lname = self.has_license()
         base:dict[str,Any] = {
-            'Default branch is called main': self.default_branch_is_main(),
-            'Default branch is protected': self.default_branch_is_protected(),
-            'Issues are enabled': self.has_issues_enabled(),
-            'Rules enforced for admins': self.rules_enforced_for_admins(),
-            'Requires approval': self.approval_review_count_greater_than_zero(),
-            'Has a description': self.has_description(),
-            'Has a license': l,
-            'License type': lname
+            '[B] Default branch is called main': self.default_branch_is_main(),
+            '[B] Default branch is protected': self.default_branch_is_protected(),
+            '[B] Issues are enabled': self.has_issues_enabled(),
+            '[B] Rules enforced for admins': self.rules_enforced_for_admins(),
+            '[B] Requires approval': self.approval_review_count_greater_than_zero(),
+            '[B] Has a description': self.has_description(),
+            '[B] Has a license': l,
         }
         overall:bool = True
         for k,v in base.items():
             if v is False:
                 overall = False
+        base['License type'] = lname
         base['_baseline'] = overall
         return base
 
@@ -76,12 +76,12 @@ class _Standards:
     def extended(self) -> dict[str, Any]:
         """Extra elements to check for"""
         extras:dict[str, Any] = {
-            'Requires code owner approval': self.requires_code_owner_reviews(),
-            'Vulnerability alerts are enabled': self.r.get_vulnerability_alert(),
-            'Code owners is in .github folder': self._has_file('./.github/CODEOWNERS'),
-            'Readme is present': self._has_file('./README.md'),
-            'Code of conduct is present': self._has_file('./CODE_OF_CONDUCT.md'),
-            'Contributing guide is present': self._has_file('./CONTRIBUTING.md'),
+            '[E] Requires code owner approval': self.requires_code_owner_reviews(),
+            '[E] Vulnerability alerts are enabled': self.r.get_vulnerability_alert(),
+            '[E] Code owners is in .github folder': self._has_file('./.github/CODEOWNERS'),
+            '[E] Readme is present': self._has_file('./README.md'),
+            '[E] Code of conduct is present': self._has_file('./CODE_OF_CONDUCT.md'),
+            '[E] Contributing guide is present': self._has_file('./CONTRIBUTING.md'),
         }
         overall:bool = True
         for k,v in extras.items():
