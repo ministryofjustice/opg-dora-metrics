@@ -14,13 +14,14 @@ from pprint import pp
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--service', help='Name of the service - this is added into the datapoints to help merging later', required=True)
+    parser.add_argument('--role', help='role arn to assume for this command', required=True)
     args = parser.parse_args()
 
     now:datetime = datetime.now(timezone.utc)
     end:datetime = now.replace(hour=0, minute=0, second=0, microsecond=0)
     start:datetime = end - relativedelta(days=1)
 
-    cw = client('cloudwatch', 'us-east-1')
+    cw = client('cloudwatch', args.role, 'us-east-1')
     metrics = health_check_metrics(cw)
     # make a call for every
     data:list[dict[str,Any]] = heath_check_metric_stats(cw, metrics, start, end)

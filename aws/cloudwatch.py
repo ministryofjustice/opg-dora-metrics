@@ -68,4 +68,5 @@ def heath_check_metric_stats(client,
     else:
         data_points = response['Datapoints']
     logging.debug('datapoints found', start=start, end=end, period=period, unit=unit, stats=stats)
+    logging.info('datapoints found', found=len(data_points))
     return data_points
