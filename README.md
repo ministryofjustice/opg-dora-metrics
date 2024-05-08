@@ -34,6 +34,15 @@ For example usage, please check the make targets `github_repository_standards_by
 
 *Note: This command does require a github auth token to run*
 
+### Daily Service Uptime
+
+Using AWS cloudwatch health checks, this finds all the `HealthCheckPercentageHealthy` metrics for the account (via environment variables) and generates a json file for yesterdays data.
+
+`service_uptime_daily.py` is intended to run daily and then a secondary script will merge the data files and generate a report over a longer time period.
+
+This is due heath check data being kept in AWS for less than 3 months - and these are typically reported on as monthly or quartly.
+
+
 ## Testing
 
 All tests are run within github workflows and you can run them directly via `make tests` or pick a particular set using `make test names=${PATTERN}`.
