@@ -40,15 +40,16 @@ def heath_check_metric_stats(client,
                              stats:list[str] = ['Average']
                              ) -> list[dict[str,Any]]:
     """Call the AWS api to get datapoints for the healthchecks between the dates passed"""
-    logging.debug('getting health check stats', start=start, end=end, period=period, unit=unit, stats=stats)
+    logging.info('getting health check stats', start=start, end=end, period=period, unit=unit, stats=stats)
 
     data_points:list[dict[str,Any]] = []
     namespace:str = 'AWS/Route53'
     dimensions:list[dict[str,str]] = _just_dimensions(metrics)
 
+    logging.info('health check metrics found', found=len(metrics))
     if len(dimensions) > 30:
         logging.error('can only use 30 dimensions, truncating')
-        dimensions = dimensions[0:30]
+        dimensions = dimensions[0:29]
 
     response = client.get_metric_statistics(
         Namespace=namespace,
