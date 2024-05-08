@@ -43,8 +43,13 @@ def heath_check_metric_stats(client,
     logging.debug('getting health check stats', start=start, end=end, period=period, unit=unit, stats=stats)
 
     data_points:list[dict[str,Any]] = []
-    dimensions:list[dict[str,str]] = _just_dimensions(metrics)
     namespace:str = 'AWS/Route53'
+    dimensions:list[dict[str,str]] = _just_dimensions(metrics)
+
+    if len(dimensions) > 30:
+        logging.error('can only use 30 dimensions, truncating')
+        dimensions = dimensions[0:30]
+
     response = client.get_metric_statistics(
         Namespace=namespace,
         MetricName=_metric,
