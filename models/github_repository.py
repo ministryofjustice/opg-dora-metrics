@@ -54,6 +54,7 @@ class _Standards:
         base['__Last commit date'] = self.r.get_branch(self.r.default_branch).commit.commit.committer.date
         base['__Open pull requests'] = self.r.get_pulls(state='open', sort='created', base=self.r.default_branch).totalCount
         base['__Forks'] = self.r.forks_count
+        base['__Webhooks'] = self.r.get_hooks().totalCount
         try:
             base['__Clone traffic'] = self.r.get_clones_traffic()['count']
         except:
@@ -87,7 +88,6 @@ class _Standards:
         """Extra elements to check for"""
         extras:dict[str, Any] = {
             '[E] Requires code owner approval': self.requires_code_owner_reviews(),
-            '[E] No Webhooks': (self.r.get_hooks().totalCount == 0),
             '[E] Vulnerability alerts are enabled': self.r.get_vulnerability_alert(),
             '[E] Code owners is in .github folder': self._has_file('./.github/CODEOWNERS'),
             '[E] Readme is present': self._has_file('./README.md'),
