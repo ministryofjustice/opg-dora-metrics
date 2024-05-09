@@ -3,7 +3,7 @@ import os
 import glob
 import json
 from typing import Any
-from datetime import date
+from datetime import date, datetime
 import requests
 from zipfile import ZipFile
 from tempfile import TemporaryDirectory
@@ -504,15 +504,35 @@ class GithubRepository:
         grouped:dict[list[dict]] = self.metrics().group_by(data, start, end, 'Service')
 
         pp(grouped.keys())
-        uptime_averages:dict = {}
+        uptime_per_day:dict = {}
+        uptime_per_month:dict = {}
         for service, datapoints in grouped.items():
-            current = uptime_averages.get(service, {'total':0, 'count':0})
+
+            current_day = uptime_per_day.get(service, {})
+            current_month = uptime_per_month.get(service, {})
             for d in datapoints:
-                current['total'] += d['Average']
-                current['count'] += 1
-                current['average'] = current['total'] / current['count']
-            uptime_averages[service] = current
-        pp(uptime_averages)
+                ts:str = d['Timestamp']
+                dt:datetime = datetime.strptime(ts, '%Y-%m-%d %H:%M:%S+00:00')
+                ## per day
+                #2024-05-08 10:40:00+00:00
+                key:str = f'{dt.date()}'
+                day = current_day.get(key, {'total':0, 'count':0})
+                day['total'] += d['Average']
+                day['count'] += 1
+                day['average'] = day['total'] / day['count']
+                current_day[key] = day
+                ## per month
+                m:str = f'{dt.strftime("%Y-%m")}'
+                month = current_month.get(m, {'total':0, 'count':0})
+                month['total'] += d['Average']
+                month['count'] += 1
+                month['average'] = month['total'] / month['count']
+                current_month[m] = month
+
+            uptime_per_day[service] = current_day
+            uptime_per_month[service] = current_month
+        pp(uptime_per_day)
+        pp(uptime_per_month)
 
     @timer
     def deployment_frequency(self, start:date, end:date, branch:str='main', workflow_pattern:str = ' live') -> dict[str, dict[str,Any]]:
