@@ -223,7 +223,7 @@ def test_models_GithubRepository_deployment_frequency_no_workflows(
                 data:list[dict] = repo.pull_requests().prs(branch, start, end, 'closed')
 
                 # check the grouping is all in range
-                grouped = repo.metrics().groupby(data, start, end)
+                grouped = repo.metrics().group_by_date(data, start, end)
                 for ym, d in grouped.items():
                     assert between ( to_datetime(ym) , start, end) == True
 

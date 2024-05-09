@@ -1,6 +1,13 @@
 import re
+import os
+import glob
+import json
 from typing import Any
 from datetime import date
+import requests
+from zipfile import ZipFile
+from tempfile import TemporaryDirectory
+
 
 from github import Github
 from github.PaginatedList import PaginatedList
@@ -8,6 +15,7 @@ from github.Repository import Repository
 from github.WorkflowRun import WorkflowRun
 from github.PullRequest import PullRequest
 from github.Team import Team
+from github.Artifact import Artifact
 
 from converter.convert import to, remapper
 from log.logger import logging
@@ -225,6 +233,51 @@ class _PullRequests:
         found:list[dict[str,Any]] = self._parse_pull_requests(prs, branch, start, end)
         return found
 
+class _Artifact:
+    """Handle downloading and extracting and artifact"""
+    name:str = None
+    artifact:Artifact = None
+    token:str = None
+    def __init__(self, token:str, artifact:Artifact) -> None:
+        self.token = token
+        self.artifact = artifact
+        self.name = artifact.name
+
+    @timer
+    def _extract(self, dir:str, file:str):
+        """"""
+        logging.info('extracting artifact', file=file, dir=dir)
+        with ZipFile(file, 'r') as z:
+            z.extractall(path=dir)
+        os.remove(file)
+
+    @timer
+    def _download(self, dir:str):
+        """"""
+        logging.info('downloading artifact', url=self.artifact.archive_download_url, dir=dir, workflow=self.artifact.workflow_run.id)
+        filepath:str = f"{dir}/{self.name}-{self.artifact.created_at.date()}.zip"
+        headers:dict[str,str] = {'Authorization': 'Bearer ' + self.token}
+        response =  requests.get(self.artifact.archive_download_url, headers=headers)
+
+        if response.status_code != 200:
+            raise Exception(f"Error downloading artifact - {self.artifact.archive_download_url}")
+        with open(filepath, 'wb+') as f:
+            f.write(response.content)
+        return filepath
+
+    @timer
+    def get(self) -> list[dict]:
+        """"""
+        content:list[dict] = []
+        #temp_dir:TemporaryDirectory = TemporaryDirectory()
+        with TemporaryDirectory() as temp_dir:
+            file:str = self._download(temp_dir)
+            self._extract(temp_dir, file)
+            # now loop over all the files and read them as json items
+            for f in glob.glob(temp_dir + '/*.json'):
+                with open(f) as file:
+                    content += json.load(file)
+        return content
 
 class _Workflows:
     """Handle all things relating to workflows"""
@@ -245,6 +298,7 @@ class _Workflows:
         all:list[WorkflowRun] = []
         months = year_month_list(start, end)
         for m in months:
+            logging.debug('looking for workflows in range', created=f'{m}..{m}')
             rloop:PaginatedList[WorkflowRun] = self.r.get_workflow_runs(branch=branch, created=f'{m}..{m}' )
             logging.debug(f'found [{rloop.totalCount}] workflows', repo=self.name, created=m, branch=branch)
 
@@ -262,26 +316,48 @@ class _Workflows:
         return all
 
     @timer
-    def _parse(self, runs:list[WorkflowRun], pattern:str, start: date, end:date) -> list[dict[str,Any]]:
-        """Reduces all workflows down to those that match pattern and within date range - converts to list of dicts.
-
-        Note: Only attributes whose name is within fields will be added
-        """
-        found:list[dict[str,Any]] = []
+    def _filter(self, runs:list[WorkflowRun], pattern:str, start: date, end:date) -> list[WorkflowRun]:
+        """Reduce the list of runs to those created iin the date range and with a name matching the pattern"""
+        found:list[WorkflowRun] = []
         for workflow in runs:
             if not between(workflow.created_at, start, end):
                 logging.debug('outside of date range ❌', repo=self.name, workflow=workflow.name, pattern=pattern, branch=workflow.head_branch, date=workflow.created_at)
             elif re.search(pattern, workflow.name.lower()):
                 logging.debug('match ✅', repo=self.name, workflow=workflow.name, pattern=pattern, branch=workflow.head_branch, date=workflow.created_at)
-                item:dict[str,Any] = to(workflow,
-                                        remap=[
-                                            remapper('conclusion', 'status'),
-                                            remapper('created_at', 'date'),
-                                        ])
-                found.append(item)
+                found.append(workflow)
             else:
                 logging.debug('no match ❌', repo=self.name, workflow=workflow.name, pattern=pattern, branch=workflow.head_branch, date=workflow.created_at)
         return found
+
+    @timer
+    def _parse(self, runs:list[WorkflowRun], pattern:str, start: date, end:date) -> list[dict[str,Any]]:
+        """Reduces all workflows down to those that match pattern and within date range - converts to list of dicts.
+
+        Note: Only attributes whose name is within fields will be added
+        """
+        filtered:list[WorkflowRun] = self._filter(runs, pattern, start, end)
+        found:list[dict[str,Any]] = []
+        for workflow in filtered:
+            item:dict[str,Any] = to(workflow,
+                                    remap=[
+                                        remapper('conclusion', 'status'),
+                                        remapper('created_at', 'date'),
+                                    ])
+            found.append(item)
+        return found
+
+    @timer
+    def artifacts(self, workflow_pattern:str, branch:str, start: date, end:date) -> list[Artifact]:
+        """Return a list of artifacts in the range passed and return artifacts on those workflows"""
+        logging.debug('looking for artifacts on workflows', repo=self.name, pattern=workflow_pattern, branch=branch, start=start, end=end)
+        all:list[WorkflowRun] = self._get(branch, start, end)
+        filtered:list[WorkflowRun] = self._filter(all, workflow_pattern, start, end)
+
+        artifacts:list[Artifact] = []
+        for wf in filtered:
+            for artifact in wf.get_artifacts():
+                artifacts.append(artifact)
+        return artifacts
 
     @timer
     def runs(self, pattern:str, branch:str, start: date, end:date) -> list[dict[str,Any]]:
@@ -320,9 +396,12 @@ class _Metrics:
         self.name = name
 
     @timer
-    def averages(self, totals:dict[str, dict[str,Any]]) -> dict[str, dict[str,Any]]:
+    def averages(self, totals:dict[str, dict[str,Any]], f=None) -> dict[str, dict[str,Any]]:
         """Append average information into the totals"""
-        avgf = lambda month, value: ( round( value / weekdays_in_month( to_date(month) ), 2 ) )
+        if f is None:
+            avgf = lambda month, value: ( round( value / weekdays_in_month( to_date(month) ), 2 ) )
+        else:
+            avgf = f
         return averages(totals, avgf)
 
     @timer
@@ -331,8 +410,14 @@ class _Metrics:
         return totals(data, key)
 
     @timer
-    def groupby(self, items:list[dict[str,Any]], start:date, end:date ) -> dict[str, list[dict[str,Any]]]:
-        """Handle grouping a list of objects"""
+    def group_by(self, items:list[dict[str,Any]], start:date, end:date, key:str) -> dict[str, list[dict[str,Any]]]:
+        """Group the data by the key passed"""
+        group_function = lambda x : x.get(key)
+        return group(items, group_function)
+
+    @timer
+    def group_by_date(self, items:list[dict[str,Any]], start:date, end:date) -> dict[str, list[dict[str,Any]]]:
+        """Handle grouping a list of objects by the date field and add any missing months"""
         group_function = lambda x : x.get('date').strftime('%Y-%m')
         return range_fill(
             group(items, group_function),
@@ -402,9 +487,33 @@ class GithubRepository:
                 all.append(t)
         return all
 
+
+
     ###############
-    # REPORTS
+    # REPORTS / METRICS
     ###############
+    @timer
+    def uptime(self, token:str, start:date, end:date, branch:str = 'main', pattern:str = 'daily '):
+        """"""
+        artifacts:list = self.workflows().artifacts(pattern, branch, start, end)
+        data:list[dict] = []
+        for a in artifacts:
+            artifact:_Artifact = _Artifact(token, a)
+            data += artifact.get()
+
+        grouped:dict[list[dict]] = self.metrics().group_by(data, start, end, 'Service')
+
+        pp(grouped.keys())
+        uptime_averages:dict = {}
+        for service, datapoints in grouped.items():
+            current = uptime_averages.get(service, {'total':0, 'count':0})
+            for d in datapoints:
+                current['total'] += d['Average']
+                current['count'] += 1
+                current['average'] = current['total'] / current['count']
+            uptime_averages[service] = current
+        pp(uptime_averages)
+
     @timer
     def deployment_frequency(self, start:date, end:date, branch:str='main', workflow_pattern:str = ' live') -> dict[str, dict[str,Any]]:
         """Measure the number of github action workflow runs (success and failures) between the date range specified
@@ -424,7 +533,7 @@ class GithubRepository:
 
         logging.info(f'found [{len(data)}] total df measures in range [{self.name}]', repo=self.name, start=start, end=end)
 
-        grouped:dict[str, list[dict[str,Any]]] = self.metrics().groupby(data, start, end)
+        grouped:dict[str, list[dict[str,Any]]] = self.metrics().group_by_date(data, start, end)
         logging.debug('grouped results', grouped=grouped, repo=self.name)
 
         totaled:dict[str, dict[str,Any]] = self.metrics().totals(grouped, 'status')
