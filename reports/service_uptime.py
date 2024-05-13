@@ -50,7 +50,6 @@ def _by_day(by_day:dict[str, dict[str,float]], months:list[str], all_days:list[s
     # now we generate one per month
     for year_month in months:
         ym:date = datetime.strptime(year_month, '%Y-%m').date()
-        month_str:str = ym.strftime('%Y-%m')
         max:int = calendar._monthlen(ym.year, ym.month)
         if ym.year == now.year and ym.month == now.month:
             max = now.day
@@ -58,7 +57,6 @@ def _by_day(by_day:dict[str, dict[str,float]], months:list[str], all_days:list[s
         days:list = [ym.replace(day=i).strftime('%Y-%m-%d') for i in range(1, max+1)]
         # reduce the months to just this month
         output:str = template.render(now=t,
-                                     month=month_str,
                                      by_day=by_day,
                                      duration=duration,
                                      days=days,
