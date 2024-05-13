@@ -57,13 +57,30 @@ def year_month_list(start:date, end:date, fmt:str = '%Y-%m') -> list[str]:
 
     Will return the month of the end date as well.
     """
-    d:list[str] = []
+    return date_list( start=start, end=end, month=1 )
 
-    e = end.replace(day=20)
-    i = start.replace(day=1)
+@timer
+def date_list(start:date, end:date, year:int=0, month:int=0, day:int=0, format:str='%Y-%m') -> list[str]:
+    """Generate a lsit of days in format between the start and end date passed.
+
+    Allows chaging the interval dates are added by passing year / month / day params
+    """
+    items:list[str] = []
+
+    e:date = end
+    i:date = start
+
+    # if we're using years, reset the months
+    if year > 0:
+        i = i.replace(month=1)
+    # if we're using months, then reset the starting day so we capture the last month correctly
+    elif month > 0:
+        i = i.replace(day=1)
+
     while i <= e:
-        d.append(i.strftime(fmt))
-        i += relativedelta(months=1)
-    d.sort()
-    logging.debug("year month list", start=start, end=end, result=d)
-    return d
+        items.append(i.strftime(format))
+        i += relativedelta(years=year, months=month, days=day)
+
+    items.sort()
+    logging.debug("date list", start=start, end=end, result=items)
+    return items

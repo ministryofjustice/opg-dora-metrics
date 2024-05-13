@@ -20,7 +20,7 @@ from github.Artifact import Artifact
 from converter.convert import to, remapper
 from log.logger import logging
 from utils.decorator import timer
-from utils.dates import between, year_month_list, weekdays_in_month, to_date
+from utils.dates import between, year_month_list, weekdays_in_month, to_date, date_list
 from utils.group import group, range_fill
 from utils.total import totals
 from utils.average import averages
@@ -416,12 +416,39 @@ class _Metrics:
         return group(items, group_function)
 
     @timer
-    def group_by_date(self, items:list[dict[str,Any]], start:date, end:date) -> dict[str, list[dict[str,Any]]]:
-        """Handle grouping a list of objects by the date field and add any missing months"""
-        group_function = lambda x : x.get('date').strftime('%Y-%m')
+    def group_by_ym(self, items:list[dict[str,Any]], start:date, end:date) -> dict[str, list[dict[str,Any]]]:
+        """Handle grouping a list of objects by the YYYY-MM version of the date field and add any missing months"""
+        return self.group_by_date(
+            items=items,
+            start=start,
+            end=end,
+            by_month=True,
+            format='%Y-%m'
+        )
+
+    @timer
+    def group_by_date(self,
+                      items:list[dict[str,Any]],
+                      start:date,
+                      end:date,
+                      by_year:bool=False,
+                      by_month:bool=False,
+                      by_day:bool=False,
+                      format:str = None
+                      ) -> dict[str, list[dict[str,Any]]]:
+        """Group series of date by the date format required and fill in any gaps"""
+        gf = lambda x: x.get('date').strftime(format)
+        # get all dates between the ranges
+        dates = date_list(start=start,
+                      end=end,
+                      format=format,
+                      year=1 if by_year else 0,
+                      month=1 if by_month else 0,
+                      day=1 if by_day else 0
+                    )
         return range_fill(
-            group(items, group_function),
-            year_month_list(start, end)
+            group(items, gf),
+            dates
         )
 
 
@@ -553,7 +580,7 @@ class GithubRepository:
 
         logging.info(f'found [{len(data)}] total df measures in range [{self.name}]', repo=self.name, start=start, end=end)
 
-        grouped:dict[str, list[dict[str,Any]]] = self.metrics().group_by_date(data, start, end)
+        grouped:dict[str, list[dict[str,Any]]] = self.metrics().group_by_ym(data, start, end)
         logging.debug('grouped results', grouped=grouped, repo=self.name)
 
         totaled:dict[str, dict[str,Any]] = self.metrics().totals(grouped, 'status')
