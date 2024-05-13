@@ -10,14 +10,17 @@ from pprint import pp
 T = TypeVar('T', dict, MutableMapping)
 
 @timer
-def avg(totals: dict[str, dict[str,float]], total_key:str, counter_key:str) -> dict[str, dict[str,Any]]:
+def avg(totals: dict[str, dict[str,float]], total_key:str, counter_key:str) -> dict[str, dict[str,float]]:
     """Takes a series of total and counters an works out average
     """
     avgs:dict[str, dict[str,float]] = {}
     for k, item in totals.items():
         total:float = item.get(total_key)
         counter:int = item.get(counter_key)
-        avgs[k] = {'total': total, 'count': counter, 'average': (total/counter) }
+        if counter > 0:
+            avgs[k] = {'total': total, 'count': counter, 'average': (total/counter) }
+        else:
+            avgs[k] = {'total': None, 'count': None, 'average': None }
     return avgs
 
 @timer

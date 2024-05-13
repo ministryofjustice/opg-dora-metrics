@@ -22,8 +22,8 @@ from log.logger import logging
 from utils.decorator import timer
 from utils.dates import between, year_month_list, weekdays_in_month, to_date, date_list
 from utils.group import group, range_fill
-from utils.total import totals
-from utils.average import averages
+from utils.total import totals, summed
+from utils.average import averages, avg
 
 from pprint import pp
 
@@ -245,21 +245,22 @@ class _Artifact:
 
     @timer
     def _extract(self, dir:str, file:str):
-        """"""
-        logging.info('extracting artifact', file=file, dir=dir)
+        """Extract this artifact file into the directory specified"""
+        logging.debug('extracting artifact', file=file, dir=dir)
         with ZipFile(file, 'r') as z:
             z.extractall(path=dir)
         os.remove(file)
 
     @timer
     def _download(self, dir:str):
-        """"""
-        logging.info('downloading artifact', url=self.artifact.archive_download_url, dir=dir, workflow=self.artifact.workflow_run.id)
+        """Download this artifact to the dir passed"""
+        logging.debug('downloading artifact', url=self.artifact.archive_download_url, dir=dir, workflow=self.artifact.workflow_run.id, name=self.name)
         filepath:str = f"{dir}/{self.name}-{self.artifact.created_at.date()}.zip"
         headers:dict[str,str] = {'Authorization': 'Bearer ' + self.token}
         response =  requests.get(self.artifact.archive_download_url, headers=headers)
 
         if response.status_code != 200:
+            logging.error("Error downloading artifact", url=self.artifact.archive_download_url, name=self.name)
             raise Exception(f"Error downloading artifact - {self.artifact.archive_download_url}")
         with open(filepath, 'wb+') as f:
             f.write(response.content)
@@ -267,7 +268,7 @@ class _Artifact:
 
     @timer
     def get(self) -> list[dict]:
-        """"""
+        """Return content of all of this artifacts json files as a dict"""
         content:list[dict] = []
         #temp_dir:TemporaryDirectory = TemporaryDirectory()
         with TemporaryDirectory() as temp_dir:
@@ -396,8 +397,18 @@ class _Metrics:
         self.name = name
 
     @timer
+    def summed(self, data:dict[str, list[dict[str, Any]]], key:str) -> dict[str, dict[str,Any]]:
+        """Creates a total. Works with avgs"""
+        return summed(data, key)
+
+    @timer
+    def avgs(self, data:dict[str, dict[str,float]], total_key:str, counter_key:str='_count') -> dict[str, dict[str,float]]:
+        """Creates averages. Works with summer"""
+        return avg(data, total_key, counter_key)
+
+    @timer
     def averages(self, totals:dict[str, dict[str,Any]], f=None) -> dict[str, dict[str,Any]]:
-        """Append average information into the totals"""
+        """Append average information into the totals. Works with output of totals"""
         if f is None:
             avgf = lambda month, value: ( round( value / weekdays_in_month( to_date(month) ), 2 ) )
         else:
@@ -406,7 +417,7 @@ class _Metrics:
 
     @timer
     def totals(self, data:dict[str, list[dict[str,Any]]], key:str) -> dict[str, dict[str,Any]]:
-        """Create totals for each group with extra total count for each value of key"""
+        """Create totals for each group with extra total count for each value of key. Works with averages."""
         return totals(data, key)
 
     @timer
@@ -434,10 +445,11 @@ class _Metrics:
                       by_year:bool=False,
                       by_month:bool=False,
                       by_day:bool=False,
-                      format:str = None
+                      format:str = None,
+                      key:str = 'date'
                       ) -> dict[str, list[dict[str,Any]]]:
         """Group series of date by the date format required and fill in any gaps"""
-        gf = lambda x: x.get('date').strftime(format)
+        gf = lambda x: x.get(key).strftime(format)
         # get all dates between the ranges
         dates = date_list(start=start,
                       end=end,
@@ -520,46 +532,46 @@ class GithubRepository:
     # REPORTS / METRICS
     ###############
     @timer
-    def uptime(self, token:str, start:date, end:date, branch:str = 'main', pattern:str = 'daily '):
-        """"""
+    def uptime(self, token:str, start:date, end:date, branch:str = 'main', pattern:str = 'daily ') -> dict[str, dict[str, dict[str, float]]]:
+        """Get all the artifacts with uptime reports in them, download that data and merge int o dataset.
+
+        Use that data set to create by service breakdown by month and day for eeach for their uptime and return that
+        as a dict
+        """
+        # get the artifacts
         artifacts:list = self.workflows().artifacts(pattern, branch, start, end)
         data:list[dict] = []
         for a in artifacts:
             artifact:_Artifact = _Artifact(token, a)
             data += artifact.get()
 
-        grouped:dict[list[dict]] = self.metrics().group_by(data, start, end, 'Service')
+        # create the date object versions
+        for dp in data:
+            dp['date'] = datetime.strptime(dp['Timestamp'], '%Y-%m-%d %H:%M:%S+00:00')
+        # group all the data points by the service name
+        by_service:dict[list[dict]] = self.metrics().group_by(data, start, end, 'Service')
 
-        pp(grouped.keys())
-        uptime_per_day:dict = {}
-        uptime_per_month:dict = {}
-        for service, datapoints in grouped.items():
+        # now find by month and by day stats
+        by_service_by_month = {}
+        by_service_by_day = {}
+        for service, datapoints in by_service.items():
+            # by month
+            by_month_group = self.metrics().group_by_date(datapoints, start, end, by_month=True, format='%Y-%m')
+            by_month_totals = self.metrics().summed(by_month_group, 'Average')
+            by_month_averages = self.metrics().avgs(by_month_totals, 'Average')
+            by_service_by_month[service] = dict(sorted(by_month_averages.items()))
 
-            current_day = uptime_per_day.get(service, {})
-            current_month = uptime_per_month.get(service, {})
-            for d in datapoints:
-                ts:str = d['Timestamp']
-                dt:datetime = datetime.strptime(ts, '%Y-%m-%d %H:%M:%S+00:00')
-                ## per day
-                #2024-05-08 10:40:00+00:00
-                key:str = f'{dt.date()}'
-                day = current_day.get(key, {'total':0, 'count':0})
-                day['total'] += d['Average']
-                day['count'] += 1
-                day['average'] = day['total'] / day['count']
-                current_day[key] = day
-                ## per month
-                m:str = f'{dt.strftime("%Y-%m")}'
-                month = current_month.get(m, {'total':0, 'count':0})
-                month['total'] += d['Average']
-                month['count'] += 1
-                month['average'] = month['total'] / month['count']
-                current_month[m] = month
+            by_day_group = self.metrics().group_by_date(datapoints, start, end, by_day=True, format='%Y-%m-%d')
+            by_day_totals = self.metrics().summed(by_day_group, 'Average')
+            by_day_averages = self.metrics().avgs(by_day_totals, 'Average')
+            by_service_by_day[service] = dict(sorted(by_day_averages.items()))
 
-            uptime_per_day[service] = current_day
-            uptime_per_month[service] = current_month
-        pp(uptime_per_day)
-        pp(uptime_per_month)
+        return {
+            'raw': data,
+            'by_month': by_service_by_month,
+            'by_day': by_service_by_day
+        }
+
 
     @timer
     def deployment_frequency(self, start:date, end:date, branch:str='main', workflow_pattern:str = ' live') -> dict[str, dict[str,Any]]:
