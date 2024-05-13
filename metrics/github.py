@@ -23,6 +23,7 @@ def standards_compliance(repositories:list[str], g:Github, exclude_archived:bool
     base:int = 0
     extended:int = 0
     l:int = len(repositories)
+    total:int = 0
     for i, slug in enumerate(repositories):
         logging.debug('getting standards_compliance for repo', repository_name=slug)
         repo = GithubRepository(g, slug)
@@ -35,6 +36,7 @@ def standards_compliance(repositories:list[str], g:Github, exclude_archived:bool
         logging.info(f'[{i+1}/{l}] standards_compliant for repo [{repo.name}]', repo=repo.name, compliance=comp)
         base += 1 if comp['_baseline'] is True else 0
         extended += 1 if comp['_extended'] is True else 0
+        total += 1
 
     end_time:datetime = datetime.now(timezone.utc)
     duration = human_duration(start_time, end_time)
@@ -50,7 +52,8 @@ def standards_compliance(repositories:list[str], g:Github, exclude_archived:bool
             'compliance_rates': {
                 'baseline': base,
                 'extended': extended,
-                'total': len(repositories)
+                'total': total,
+                'total_including_archived': len(repositories),
             },
         },
         'compliance': compliance
