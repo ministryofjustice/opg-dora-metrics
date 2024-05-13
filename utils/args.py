@@ -14,7 +14,7 @@ def date_from_duration(months_ago:str) -> dict[str, date]:
         end:date = datetime.now(timezone.utc).date()
         start:date = end - relativedelta(months=int(months_ago))
         start = start.replace(day=1)
-        return {'start': start, 'end':end}
+        return {'start': start, 'end':end, 'duration': months_ago}
     except Exception as e:
         raise argparse.ArgumentTypeError(f'argument must be postive int of months. error: {e}')
 

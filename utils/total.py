@@ -3,8 +3,34 @@ from collections.abc import MutableMapping
 
 from log.logger import logging
 from utils.decorator import timer
+
+from pprint import pp
 # source type
 T = TypeVar('T', dict, MutableMapping)
+
+@timer
+def summed(grouped: dict[str, list[dict[str, Any]]], key:str) -> dict[str, dict[str,Any]]:
+    """Generate a series of totals for the grouped information passed.
+
+    Appends `_count` which is the counter of how many items found
+
+    Example:
+        `grouped = {'2024-01':[ {'avg':100, 'others':True}, {'avg':50} ]}`
+        `key = 'avg'`
+        returned:
+            `{'2024-01': {'avg':150, '_count':2 } }`
+    """
+    summed:dict[str] = {}
+    for k, items in grouped.items():
+        if k not in summed:
+            summed[k] = {key:0, '_count': 0}
+
+        for i in items:
+            summed[k][key] += i.get(key, 0)
+            summed[k]['_count'] += 1
+    return summed
+
+
 
 @timer
 def totals(grouped: dict[str, list[T]], total_vary_by:str = None) -> dict[str, dict[str,Any]]:

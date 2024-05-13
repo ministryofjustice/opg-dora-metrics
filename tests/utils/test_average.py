@@ -1,6 +1,7 @@
 import pytest
 from typing import Any, Callable
-from utils.average import averages
+from utils.average import averages, avg
+from utils.total import summed
 from utils.dates import weekdays_in_month, to_date
 
 from pprint import pp
@@ -29,3 +30,31 @@ def test_utils_averages(data:dict[str,dict], test_key:str, expected:int):
     res:dict[str, Any] = averages(data, f)
     test = res[test_key]
     assert test.get('average') == expected
+
+@pytest.mark.parametrize(
+    "data, test_key, expected",
+    [
+        (
+            {
+                '2024-01': [{'avg': 99, 'name': 'one'}, {'avg': 100.0, 'name': 'one'}],
+                '2024-02': [{'avg': 50, 'name': 'one'}, {'avg': 100, 'name': 'one'}],
+            },
+            '2024-02',
+            75
+        ),
+        (
+            {
+                '2024-01': [{'avg': 99.8, 'name': 'one'}, {'avg': 100, 'name': 'one'}],
+                '2024-02': [{'avg': 50, 'name': 'one'}, {'avg': 100, 'name': 'one'}],
+                '2024-03': [{'avg': 100, 'name': 'one'}, {'avg': 100, 'name': 'one'}],
+            },
+            '2024-01',
+            99.9
+        ),
+    ]
+)
+def test_utils_averages_avg(data:dict[str,list[Any]], test_key:str, expected:float):
+    """"""
+    r:dict[str, Any] = summed(data, 'avg')
+    res = avg(r, 'avg', '_count')
+    assert res[test_key]['average'] == expected

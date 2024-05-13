@@ -1,6 +1,6 @@
 .DEFAULT_GOAL: all
-.PHONY: all requirements tests install github_deployment_frequency_by_org github_deployment_frequency_by_list github_repository_standards_by_list github_repository_standards_by_org
-.ONESHELL: all requirements tests install github_deployment_frequency_by_org github_deployment_frequency_by_list github_repository_standards_by_list github_repository_standards_by_org
+.PHONY: all requirements tests install github_deployment_frequency_by_org github_deployment_frequency_by_list github_repository_standards_by_list github_repository_standards_by_org daily_uptime service_uptime
+.ONESHELL: all requirements tests install github_deployment_frequency_by_org github_deployment_frequency_by_list github_repository_standards_by_list github_repository_standards_by_org daily_uptime service_uptime
 .EXPORT_ALL_VARIABLES:
 
 all: requirements install
@@ -22,19 +22,30 @@ tests:
 test:
 	env LOG_LEVEL=INFO pytest --log-cli-level=INFO -s --disable-warnings ./tests/ -k "$(names)"
 
-
 ################
 # EXAMPLE USAGE
 ################
 
+service_uptime:
+	@env LOG_LEVEL=INFO env GITHUB_ACCESS_TOKEN="${GITHUB_TOKEN}" python ./service_uptime.py \
+		--duration=1
+
+# daily uptime
+daily_uptime:
+	@aws-vault exec identity -- env LOG_LEVEL=INFO python ./service_uptime_daily.py \
+		--service=sirius \
+		--role="arn:aws:iam::$(account):role/$(role)"
+
 # repository standards
 github_repository_standards_by_list:
 	@env LOG_LEVEL=INFO env GITHUB_ACCESS_TOKEN="${GITHUB_TOKEN}" python ./github_repository_standards.py \
+		--exclude-archived \
 		--repository="ministryofjustice/opg-digideps" \
 		--repository="ministryofjustice/opg-weblate"
 
 github_repository_standards_by_org:
 	@env LOG_LEVEL=INFO env GITHUB_ACCESS_TOKEN="${GITHUB_TOKEN}" python ./github_repository_standards.py \
+		--exclude-archived \
 		--org-team="ministryofjustice:opg"
 
 
@@ -42,10 +53,10 @@ github_repository_standards_by_org:
 github_deployment_frequency_by_org:
 	@env LOG_LEVEL=INFO env GITHUB_ACCESS_TOKEN="${GITHUB_TOKEN}" python ./github_deployment_frequency.py \
 		--org-team="ministryofjustice:opg" \
-		--duration=6
+		--duration=2
 
 github_deployment_frequency_by_list:
 	@env LOG_LEVEL=INFO env GITHUB_ACCESS_TOKEN="${GITHUB_TOKEN}" python ./github_deployment_frequency.py \
 		--repo-branch-workflow='ministryofjustice/opg-digideps:main: live$$' \
 		--repo-branch-workflow='ministryofjustice/serve-opg:main: live$$' \
-		--duration=6
+		--duration=2

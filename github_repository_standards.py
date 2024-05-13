@@ -27,10 +27,18 @@ def main() :
                             action='append',
                             help="Specify multiple repositories (<repo-full-name>)")
 
+    parser.add_argument('--exclude-archived',
+                        help='Decide if we include archived repositories or not in the report',
+                        default=True,
+                        action=argparse.BooleanOptionalAction)
+
+
     args = parser.parse_args()
 
     repoconfig = args.org_team if args.org_team is not None else args.repository
-    logging.info("running report", repoconfig=repoconfig)
+    exclude_archived:bool = bool(args.exclude_archived)
+    logging.info("running report", repoconfig=repoconfig, exclude_archived=exclude_archived)
+
 
     repos:list[str] = []
     if type(repoconfig) == dict:
@@ -44,7 +52,7 @@ def main() :
         g, _, _ = init(token=os.environ.get("GITHUB_ACCESS_TOKEN", None ) )
         repos = list(args.repository)
 
-    data:dict[str, dict[str, dict[str,Any]]] = standards_compliance(repos, g)
+    data:dict[str, dict[str, dict[str,Any]]] = standards_compliance(repos, g, exclude_archived)
 
     data['meta']['args'] = args.__dict__
     # dir to output to

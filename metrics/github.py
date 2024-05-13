@@ -14,7 +14,7 @@ from pprint import pp
 
 
 @timer
-def standards_compliance(repositories:list[str], g:Github) -> dict[str, dict[str, dict[str,Any]]]:
+def standards_compliance(repositories:list[str], g:Github, exclude_archived:bool=True) -> dict[str, dict[str, dict[str,Any]]]:
     """Fetch stanards compliance checks for each repository passed"""
     logging.debug('standards compliance data', repositories=repositories)
     start_time:datetime = datetime.now(timezone.utc)
@@ -26,6 +26,9 @@ def standards_compliance(repositories:list[str], g:Github) -> dict[str, dict[str
     for i, slug in enumerate(repositories):
         logging.debug('getting standards_compliance for repo', repository_name=slug)
         repo = GithubRepository(g, slug)
+        # skip archived repos if flag is set
+        if repo.r.archived and exclude_archived is True:
+            continue
         comp:dict[str,Any] = repo.standards_compliant()
         comp['_name'] = repo.name.replace('ministryofjustice/', '')
         compliance[repo.name] = comp

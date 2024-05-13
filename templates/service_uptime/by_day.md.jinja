@@ -1,0 +1,42 @@
+---
+title: Uptime per service, per day {{ report_time or '' }}
+last_reviewed_on: {{ now }}
+review_in: {{ review_in or '3' }} months
+---
+# <%= current_page.data.title %>
+
+
+*Published on {{ now }} in {{ duration }}*
+
+<table class='dataframe'>
+    <thead>
+        <tr>
+            <th style='text-align:left;'></th>
+            {% for service, items in by_day.items() -%}
+            <th style='text-align:right;'>{{ service }}</th>
+            {% endfor -%}
+        </tr>
+    </thead>
+    <tbody>
+    {% for day in days -%}
+        <tr>
+            <th style='text-align:left;'>{{ day }}</th>
+            {% for service, items in by_day.items() -%}
+            {% set value = items.get(day, {}).get('average', None) -%}
+
+            <td style='text-align:right;' title="Uptime % for {{ day }}: ({{ value }})">
+                {% if value is not none -%}
+                    {{ value | round(4) }} %
+                {% else -%}
+                    N/A
+                {% endif -%}
+            </td>
+            {% endfor -%}
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+*Created by [opg-dora-metrics](https://github.com/ministryofjustice/opg-dora-metrics)*
+
+*Note: The uptime data is an amalgamation of daily AWS health check percentage checks*
