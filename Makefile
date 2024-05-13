@@ -28,7 +28,7 @@ test:
 
 service_uptime:
 	@env LOG_LEVEL=INFO env GITHUB_ACCESS_TOKEN="${GITHUB_TOKEN}" python ./service_uptime.py \
-		--duration=2
+		--duration=1
 
 # daily uptime
 daily_uptime:

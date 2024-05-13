@@ -34,6 +34,19 @@ For example usage, please check the make targets `github_repository_standards_by
 
 *Note: This command does require a github auth token to run*
 
+### Service Uptime
+
+Merges all of the daily service uptime reports into a single view and splits that by month and service for reporting.
+
+`service_uptime.py` allows you to set how far back to fetch records (via `--duration`) buy Github only keeps artifacts for 3 months.
+
+Generates a series of reports under `./outputs/service_uptime/`.
+
+For example usage, please check the make target `service_uptime`or for more details run `python ./github_repository_standards.py --help`.
+
+*Note: This command does require a github auth token to run*
+
+
 ### Daily Service Uptime
 
 Using AWS cloudwatch health checks, this finds all the `HealthCheckPercentageHealthy` metrics for the account (via environment variables) and generates a json file for yesterdays data.
@@ -42,6 +55,7 @@ Using AWS cloudwatch health checks, this finds all the `HealthCheckPercentageHea
 
 This is due heath check data being kept in AWS for less than 3 months - and these are typically reported on as monthly or quartly.
 
+*Note: This command does require aws access to run*
 
 ## Testing
 
