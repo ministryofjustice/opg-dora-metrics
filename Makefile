@@ -41,6 +41,7 @@ github_repository_standards_by_list:
 	@env LOG_LEVEL=INFO env GITHUB_ACCESS_TOKEN="${GITHUB_TOKEN}" python ./github_repository_standards.py \
 		--exclude-archived \
 		--repository="ministryofjustice/opg-digideps" \
+		--repository="ministryofjustice/opg-lpa" \
 		--repository="ministryofjustice/opg-weblate"
 
 github_repository_standards_by_org:

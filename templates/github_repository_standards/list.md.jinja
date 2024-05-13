@@ -24,26 +24,26 @@ Lists both public and private MoJ GitHub repositories which are and are not full
 
 <table style='width:100%' class='compliance-table' id='dataset'>
     <tr>
-        <th colspan='2'></th>
-        <th title='Baseline compliance' style='text-align:center'>B</th>
-        <th title='Extended compliance' style='text-align:center'>E</th>
+        <th colspan='2' style='border:0;'></th>
+        <th title='Baseline compliance' style='text-align:center;border:0;'>B</th>
+        <th title='Extended compliance' style='text-align:center;border:0;'>E</th>
     </tr>
     {% for k, item in data['compliance'].items() -%}
     <tr>
-        <td class="expand " rowspan='3' valign='top'>
+        <td class="expand " rowspan='3' valign='top' style='border:0; border-top:1px solid rgb(177, 180, 182);'>
             <strong data-toggle='detail-{{ item['_name'] }}' class="toggler govuk-tag govuk-tag--blue" style='display:block; width:20px; text-align:center; cursor:pointer' title='Show/Hide details'>+</strong>
         </td>
-        <th style='width:88%; border-bottom-width:0;'>
+        <th style='width:88%; border:0; border-top:1px solid rgb(177, 180, 182);'>
             <a href='https://github.com/{{ k }}' class="toggler govuk-link govuk-task-list__link">{% if item['_archived']%}(ARCHIVED) {% endif %}{{ item['_name'] }}</a>
         </th>
-        <td rowspan='3' valign='top'>
+        <td rowspan='3' valign='top' style='border:0; border-top:1px solid rgb(177, 180, 182);'>
             {% if item['_baseline'] -%}
             <strong class="govuk-tag govuk-tag--green" style='display:block; width:20px; text-align:center;' title='baseline compliance passed'>✓</strong>
             {% else -%}
             <strong class="govuk-tag govuk-tag--red" style='display:block; width:20px; text-align:center;' title='baseline compliance failed'>X</strong>
             {% endif %}
         </td>
-        <td rowspan='3' valign='top'>
+        <td rowspan='3' valign='top' style='border:0; border-top:1px solid rgb(177, 180, 182);'>
             {% if item['_extended'] -%}
             <strong class="govuk-tag govuk-tag--green" style='display:block; width:20px; text-align:center;' title='extended compliance passed'>✓</strong>
             {% else -%}
@@ -52,7 +52,7 @@ Lists both public and private MoJ GitHub repositories which are and are not full
         </td>
     </tr>
     <tr class='details'>
-        <td style='display:none;' class='detail-{{ item['_name'] }}'>
+        <td style='display:none; border:0;' class='detail-{{ item['_name'] }}'>
             {% for attr, val in item.items() -%}
                 {% if '__' in attr -%}
                 <strong class='govuk-tag govuk-tag--grey' style='margin-bottom:5px; margin-right:5px; font-size:0.7rem; background-color:transparent;width:310px;'>{{ attr | replace('__', '') }}:</strong>
@@ -62,7 +62,7 @@ Lists both public and private MoJ GitHub repositories which are and are not full
         </td>
     </td>
     <tr class='details'>
-        <td style='display:none;' class='detail-{{ item['_name'] }}'>
+        <td style='display:none;border:0;' class='detail-{{ item['_name'] }}'>
             {% for attr, val in item.items() -%}
                 {% if attr[0] == '_' -%}
                 {% elif attr == 'License type' -%}
