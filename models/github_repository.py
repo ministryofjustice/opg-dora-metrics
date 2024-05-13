@@ -229,8 +229,8 @@ class _PullRequests:
         state (str):    State of the pull request (default: closed)
         """
         logging.debug('getting pull requests', repo=self.name, branch=branch, start=start, end=end, state=state)
-        prs:list[PullRequest] = self._get_pull_requests(branch, state)
-        found:list[dict[str,Any]] = self._parse_pull_requests(prs, branch, start, end)
+        prs:list[PullRequest] = self._get(branch, state)
+        found:list[dict[str,Any]] = self._parse(prs, branch, start, end)
         return found
 
 class _Artifact:
