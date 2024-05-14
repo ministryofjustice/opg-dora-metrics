@@ -20,7 +20,7 @@ def _by_month(by_month:dict[str, dict[str,float]], months:list[str], duration:st
     template:Template = env.get_template('by_month.md.jinja')
     output:str = template.render(now=t, by_month=by_month, duration=duration, months=months)
     os.makedirs(_path, exist_ok=True)
-    with open(f'{_path}latest.html.md.erb', 'w+') as f:
+    with open(f'{_path}index.html.md.erb', 'w+') as f:
         f.write(output)
     # now we generate one per month
     for year_month in months:
