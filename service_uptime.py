@@ -21,6 +21,10 @@ def main():
     parser.add_argument('--duration',
                           help='Number of months ago to use as start date, with end date being today',
                           type=date_from_duration)
+    parser.add_argument('--startdate',
+                          help='Month we started to track uptime reports',
+                          default='2024-05'
+                          )
     args = parser.parse_args()
 
     token:str = os.environ.get("GITHUB_ACCESS_TOKEN", None )

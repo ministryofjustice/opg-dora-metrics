@@ -8,13 +8,15 @@ review_in: {{ review_in or '3' }} months
 
 *Published on {{ now }} in {{ duration }}*
 
+{% set by_day_prefix = '/documentation/reports/service-uptime/by_day/' -%}
+{% set by_month_prefix = '/documentation/reports/service-uptime/by_month/' -%}
+
 <table class='dataframe'>
     <thead>
         <tr>
             <th style='text-align:left;'>Service</th>
-            {% set link_prefix = '/documentation/reports/service-uptime/by_day/' -%}
             {% for month in months -%}
-            <th style='text-align:right;'><a href='{{ link_prefix }}{{ month }}/index.html'>{{ month }}</a></th>
+            <th style='text-align:right;'><a href='{{ by_day_prefix }}{{ month }}/index.html'>{{ month }}</a></th>
             {% endfor -%}
         </tr>
     </thead>
@@ -40,3 +42,12 @@ review_in: {{ review_in or '3' }} months
 *Created by [opg-dora-metrics](https://github.com/ministryofjustice/opg-dora-metrics)*
 
 *Note: The uptime data is an amalgamation of daily AWS health check percentage checks*
+
+{% if previous -%}
+### Monthly reports
+
+{% for m in previous -%}
+- [{{ m }}]({{ by_month_prefix}}{{m}}/index)
+{% endfor -%}
+
+{% endif -%}
