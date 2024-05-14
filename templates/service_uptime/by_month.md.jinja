@@ -12,7 +12,7 @@ review_in: {{ review_in or '3' }} months
     <thead>
         <tr>
             <th style='text-align:left;'>Service</th>
-            {% set link_prefix = '/documentation/reports/service_uptime/by_day/' -%}
+            {% set link_prefix = '/documentation/reports/service-uptime/by_day/' -%}
             {% for month in months -%}
             <th style='text-align:right;'><a href='{{ link_prefix }}{{ month }}/index.html'>{{ month }}</a></th>
             {% endfor -%}
