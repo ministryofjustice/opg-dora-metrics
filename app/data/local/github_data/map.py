@@ -4,6 +4,7 @@ from github.GithubObject import GithubObject
 from github.Artifact import  Artifact
 from github.WorkflowRun import  WorkflowRun
 from github.Repository import Repository
+from github.PullRequest import PullRequest
 from github.Team import Team
 from app.data.local.github_data.base import DataMap
 from app.log.logger import logging
@@ -33,6 +34,15 @@ TeamAttributes:dict[str, Callable|None] = {
     'name': None,
     'slug': None,
     'parent': lambda x:  DataMap(x.parent, {'id': None, 'name': None, 'slug': None}),
+}
+PullRequestAttributes:dict[str, Callable|None] = {
+    'id': None,
+    'title': None,
+    'state': None,
+    'base': None,
+    'number': None,
+    'merged_at': None,
+    'url': None,
 }
 RepositoryAttributes:dict[str, Callable|None] = {
     # core
@@ -79,6 +89,7 @@ __map__: dict = {
     WorkflowRun: WorkflowRunAttributes,
     Team: TeamAttributes,
     Repository: RepositoryAttributes,
+    PullRequest: PullRequestAttributes,
 }
 ################################################
 # 

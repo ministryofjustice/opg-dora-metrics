@@ -10,7 +10,7 @@ from app.data.remote.github.to_local import to_local
 
 
 @pytest.mark.skipif(os.environ.get('GITHUB_TEST_TOKEN', 0) == 0, reason='Requires github token to run')
-def test_data_remote_github_repository_to_local():
+def test_data_remote_github_repository_to_local_using_real_repository():
     """Test the a real repository"""
     
     g:Github = Github(os.environ.get('GITHUB_TEST_TOKEN'))
@@ -20,5 +20,10 @@ def test_data_remote_github_repository_to_local():
                     end=date(year=2024, month=4, day=30),
                     get_artifacts=True,
                     )
+    # test against real world known values
+    assert 23 == len(data.get('workflow_runs'))
+    assert 23 == len(data.get('artifacts'))
+    assert False == data['archived']
+    assert 'main' == data['default_branch']
     pp(data)
     
