@@ -1,14 +1,12 @@
 from typing import Any
 from datetime import date
 from pprint import pp
-
 from github import Github
 from github.Repository import Repository
 from github.Team import Team
 from github.Artifact import Artifact
 from github.WorkflowRun import WorkflowRun
 from github.PullRequest import PullRequest
-
 from app.data.remote.github.artifact import artifacts
 from app.data.remote.github.team import teams
 from app.data.remote.github.repository import repo
@@ -16,7 +14,9 @@ from app.data.remote.github.workflow_run import workflow_runs, matching_workflow
 from app.data.remote.github.pull_requst import merged_pull_requests
 from app.data.local.github_data.map import Local
 from app.log.logger import logging
+from app.decorator import timer
 
+@timer
 def to_local(g:Github,
           reopsitory_slug:str,           
           start:date,

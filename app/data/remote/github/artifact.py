@@ -1,8 +1,9 @@
 from github.Artifact import Artifact
 from github.WorkflowRun import WorkflowRun
-
 from app.log.logger import logging
+from app.decorator import timer
 
+@timer
 def artifacts(workflow_run:WorkflowRun) -> list[Artifact]:
     """Helper to remove paginatiedlist and use a normal list"""
     logging.debug('getting artifacts', workflow_run=workflow_run.id)

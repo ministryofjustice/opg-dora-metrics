@@ -2,9 +2,7 @@ from datetime import date, datetime
 from enum import Enum
 from dateutil.relativedelta import relativedelta
 from pprint import pp
-################################################
-# 
-################################################
+from app.decorator import timer
 
 # how we increment data ranges
 __increments__: dict = {
@@ -18,10 +16,7 @@ class Increment(Enum):
     MONTH   = 'MONTH'
     DAY     = 'DAY'
 
-################################################
-# 
-################################################
-
+@timer
 def date_range(start:date, end:date, inc:Increment = Increment.MONTH) -> list[date]:
     """Creates a list of dates from the start to end date"""
     items:list[str] = []
@@ -42,7 +37,7 @@ def date_range(start:date, end:date, inc:Increment = Increment.MONTH) -> list[da
     items.sort()
     return items
 
-
+@timer
 def date_range_as_strings(start:date, end:date, inc:Increment = Increment.MONTH) -> list[str]:
     """Creates a list of strings from the start to end date"""
     date_items:list[date] = date_range(start=start, end=end, inc=inc)

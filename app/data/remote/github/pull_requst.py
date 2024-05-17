@@ -6,7 +6,9 @@ from github.PullRequest import PullRequest
 from app.utils.dates.convert import to_datetime
 from app.utils.dates.between import between
 from app.log.logger import logging
+from app.decorator import timer
 
+@timer
 def __pull_requests__(repository:Repository, branch:str, state:str='closed') -> list[PullRequest]:
     """Return all the prs"""
     logging.debug(f'[{repository.full_name}] (pull_requests) getting all', repo=repository.full_name, branch=branch)
@@ -14,7 +16,7 @@ def __pull_requests__(repository:Repository, branch:str, state:str='closed') -> 
     logging.info(f'[{repository.full_name}] (pull_requests) found {len(prs)} pull_requests', repo=repository.full_name, branch=branch)
     return prs
 
-
+@timer
 def merged_pull_requests(repository:Repository, branch:str, start:date, end:date) -> list[PullRequest]:
     """Return a list of prs for the repo in the date range set"""    
     

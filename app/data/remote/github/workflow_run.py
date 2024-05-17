@@ -7,8 +7,9 @@ from app.utils.dates.ranges import Increment, date_range_as_strings
 from app.utils.dates.between import between
 from app.utils.dates.convert import to_datetime
 from app.log.logger import logging
+from app.decorator import timer
 
-
+@timer
 def __workflow_runs__(repository:Repository, branch:str, date_range:str, status:str='success') -> list[WorkflowRun]:
     """Return a list of workflow runs for the repo in the date range set"""    
     logging.debug('getting workflow runs for date_range', repo=repository.full_name, date_range=date_range, status=status, branch=branch)
@@ -16,7 +17,7 @@ def __workflow_runs__(repository:Repository, branch:str, date_range:str, status:
     logging.debug(f'[{repository.full_name}] (workflow_runs) found [{len(runs)}] workflow_runs in date_range',  repo=repository.full_name, date_range=date_range, status=status, branch=branch)
     return runs
 
-
+@timer
 def workflow_runs(
         repository:Repository,
         branch:str,
@@ -44,7 +45,7 @@ def workflow_runs(
     logging.info(f'[{repository.full_name}] (workflow_runs) found [{len(all)}] overall workflow_runs in range',  repo=repository.full_name, start=start, end=end, status=status, branch=branch)
     return all
 
-
+@timer
 def workflow_runs_in_range(start:date,
                            end:date,
                            workflow_runs:list[WorkflowRun]) -> list[WorkflowRun]:
@@ -57,8 +58,7 @@ def workflow_runs_in_range(start:date,
             all.append(wr)    
     return all
 
-
-
+@timer
 def matching_workflow_runs(pattern:str, 
                            workflow_runs:list[WorkflowRun]) -> list[WorkflowRun]:
     """Reduce the list of workflow runs to those that match the pattern"""

@@ -2,10 +2,11 @@ from typing import Any, TypeVar, Callable
 from types import FunctionType
 from github.GithubObject import GithubObject, _ValuedAttribute, Attribute
 from app.log.logger import logging
+from app.decorator import timer
 
 G = TypeVar('G', bound=GithubObject)
 
-
+@timer
 def DataMap(source:G, map:dict[str, Callable|None]) -> dict[str, Any]:
     """Use a map of attributes passed to generate a dict of data
     Key of the dict if the field name, if the value is a function that is called, 
