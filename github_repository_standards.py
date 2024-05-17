@@ -71,19 +71,20 @@ def main() :
 
     end_time:datetime = datetime.now(timezone.utc)
     logging.info(f'[Standards Compliance] generating report documents')
+    dur:str = duration(start=start_time, end=end_time)
     response:dict = {
         'meta': {
             'args': args.__dict__,
             'timing': {
                 'start': start_time.isoformat(),
                 'end': end_time.isoformat(),
-                'duration': duration(start=start_time, end=end_time),
+                'duration': dur,
             },
         },
         'result': localised
     }
     report(response=response)
-    logging.info(f'[Standards Compliance] complete.')
+    logging.info(f'[Standards Compliance] completd in [{dur}].')
 
 
 if __name__ == "__main__":
