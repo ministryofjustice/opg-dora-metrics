@@ -1,9 +1,11 @@
 import re
-from datetime import date
+from datetime import date, datetime, timezone
 from github import Github
 from github.Repository import Repository
 from github.WorkflowRun import WorkflowRun
 from app.utils.dates.ranges import Increment, date_range_as_strings
+from app.utils.dates.between import between
+from app.utils.dates.convert import to_datetime
 from app.log.logger import logging
 
 
@@ -41,6 +43,21 @@ def workflow_runs(
         all += runs
     logging.info(f'[{repository.full_name}] (workflow_runs) found [{len(all)}] overall workflow_runs in range',  repo=repository.full_name, start=start, end=end, status=status, branch=branch)
     return all
+
+
+def workflow_runs_in_range(start:date,
+                           end:date,
+                           workflow_runs:list[WorkflowRun]) -> list[WorkflowRun]:
+    """Extra check to make sure in the bounds required"""
+    all:list[WorkflowRun] = []
+    lower:datetime = to_datetime(start)
+    upper:datetime = to_datetime(end)
+    for wr in workflow_runs:
+        if between(test=wr.created_at.replace(tzinfo=timezone.utc), lower=lower, upper=upper):
+            all.append(wr)    
+    return all
+
+
 
 def matching_workflow_runs(pattern:str, 
                            workflow_runs:list[WorkflowRun]) -> list[WorkflowRun]:

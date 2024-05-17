@@ -1,6 +1,8 @@
 from pprint import pp
 
 from github.Artifact import Artifact
+from github.WorkflowRun import WorkflowRun
+from github.GithubObject import Attribute
 
 from faker import Faker
 from faker.providers import BaseProvider
@@ -33,3 +35,15 @@ class FakeGithubArtifactProvider(BaseProvider):
             attributes.update(real_values)
         artifact:Artifact = Artifact(requester=None, headers={}, completed=True, attributes=attributes)
         return artifact
+    
+
+def attach_workflow_run(source:Artifact, target:WorkflowRun):
+    """Attach a workflow run to an artifact"""
+    assert isinstance(source, Artifact)
+    assert isinstance(target, WorkflowRun)
+
+    prop = Attribute
+    prop.value = target
+    source._workflow_run = prop
+
+    return source

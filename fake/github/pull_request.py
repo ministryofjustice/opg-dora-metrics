@@ -1,3 +1,4 @@
+from datetime import date
 from pprint import pp
 
 from github.PullRequest import PullRequest
@@ -12,8 +13,8 @@ class FakeGithubPullRequestProvider(BaseProvider):
                              count:int = 1,
                              closed:bool = None,
                              branch:str = 'main',
-                             lower_date:str='-3m',
-                             upper_date:str='-1m',
+                             lower_date:str|date='-3m',
+                             upper_date:str|date='-1m',
                              real_values:dict={}) -> list[PullRequest]:
         """Generate multiple fakes"""
         return [self.github_pull_request(closed=closed, branch=branch, lower_date=lower_date, upper_date=upper_date, real_values=real_values) for i in range(0, count)]
@@ -21,8 +22,8 @@ class FakeGithubPullRequestProvider(BaseProvider):
     def github_pull_request(self, 
                             closed:bool = None,
                             branch:str = 'main',
-                            lower_date:str='-3m',
-                            upper_date:str='-1m',
+                            lower_date:str|date='-3m',
+                            upper_date:str|date='-1m',
                             real_values:dict={}) -> PullRequest:
         """Generate an pull_request"""
 
