@@ -6,6 +6,7 @@ from github.WorkflowRun import  WorkflowRun
 from github.Repository import Repository
 from github.Team import Team
 from app.data.local.github_data.base import DataMap
+from app.log.logger import logging
 
 G = TypeVar('G', bound=GithubObject)
 
@@ -85,9 +86,10 @@ __map__: dict = {
 
 
 def Local(source:G) -> dict[str, Any]:
-    """Uses the attributes and type of the source to generate a dict of information we want"""
+    """Uses the attributes and type of the source to generate a dict of information we want"""    
     assert isinstance(source, GithubObject)
     t = type(source)
+    logging.debug('Localising details', type=t, source=source)
 
     if t not in __map__.keys():
         raise Exception(f'Type of source object is not supported: [{t}]')
