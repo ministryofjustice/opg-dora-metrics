@@ -19,6 +19,19 @@ __mapped_fields__:dict = {
     'has_code_of_conduct': 'Code of conduct is present',
     'has_contributing_guide': 'Contributing guide is present',
     'has_readme': 'Readme is present',
+
+    'archived': 'Archived',
+    'has_projects': 'Github projects are enabled',
+    'has_pages': 'Github pages are in use',
+    'has_downloads': 'Downloads are enabled',
+    'has_wiki': 'Wiki is enabled',
+    'license_name': 'License name',
+    'forks_count': 'Forks',
+    'webhooks_count': 'Webhooks',
+    'open_pull_request_count': 'Open pull requests',
+    'last_commit_date': 'Last commit date',
+    'clone_traffic_count': 'Clone traffic',
+    'private': 'Is set as private',
 }
 
 def repository_standards(local_repository:dict) -> dict:
@@ -31,12 +44,13 @@ def repository_standards(local_repository:dict) -> dict:
         'status': {},
         'information': {},
     }
+    # map to more readable name of the field
     for f in RepositoryBaselineComplianceAttributes.keys():
         field:str = __mapped_fields__[f] if f in __mapped_fields__.keys() else f
-        standards['baseline'][field] = local_repository.get(f, False)
+        standards['baseline'][field] = True if local_repository.get(f, False) is True else False
     for f in RepositoryExtendedComplianceAttributes.keys():
         field:str = __mapped_fields__[f] if f in __mapped_fields__.keys() else f
-        standards['extended'][field] = local_repository.get(f, False)
+        standards['extended'][field] = True if local_repository.get(f, False) is True else False
     # now work out pass status
     for k in ['baseline', 'extended']:
         passed:bool = True
@@ -45,7 +59,8 @@ def repository_standards(local_repository:dict) -> dict:
                 passed = False
         standards['status'][k] = passed
 
-    for field in RepositoryDetailedAttributes.keys():
-        standards['information'][field] = local_repository.get(field, None)
+    for f in RepositoryDetailedAttributes.keys():
+        field:str = __mapped_fields__[f] if f in __mapped_fields__.keys() else f
+        standards['information'][field] = local_repository.get(f, None)
 
     return standards

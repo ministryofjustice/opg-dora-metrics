@@ -1,7 +1,7 @@
 ---
 title: Repository standards
 last_reviewed_on: {{ now }}
-review_in: 3 months
+review_in: 2 weeks
 ---
 # <%= current_page.data.title %>
 
@@ -75,7 +75,7 @@ Lists both public and private MoJ GitHub repositories which are and are not full
                 <strong class="govuk-tag govuk-tag--red" style='margin-bottom:5px; margin-right:5px; font-size:0.7rem;'>[E] {{ attr }}</strong>
                 {% endif -%}
             {% endfor %}
-            <strong class="govuk-tag govuk-tag--yellow" style='margin-bottom:5px; margin-right:5px; font-size:0.7rem;'>License: {{ item['license_name'] }}</strong>
+            <strong class="govuk-tag govuk-tag--yellow" style='margin-bottom:5px; margin-right:5px; font-size:0.7rem;'>License: {{ item['standards']['information']['License name'] }}</strong>
         </td>
     </tr>
     {% endfor %}

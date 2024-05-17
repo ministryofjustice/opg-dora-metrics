@@ -1,13 +1,13 @@
 ---
 title: Repository standards compliance for {{ name }}
 last_reviewed_on: {{ now }}
-review_in: 3 months
+review_in: 2 weeks
 ---
 # <%= current_page.data.title %>
 
 Breakdown of how [{{ name }}]({{ link }}) meets compliance standards.
 
-## Baseline
+## Baseline {{ has_passed_baseline }}
 
 These standards are a mirror from [Operations Engineering](https://user-guide.operations-engineering.service.justice.gov.uk/documentation/information/mojrepostandards.html).
 
@@ -25,11 +25,11 @@ View Operations Engineering [version of this report]({{ report_link }}).
 <tr>
 <td style='text-align:left;'>{{ criteria }}</td><td style='text-align:right;'>{{ status }}</td>
 </tr>
-    {% endfor %}
+    {% endfor -%}
     </tbody>
 </table>
 
-## Extended checks
+## Extended checks {{ has_passed_extended }}
 
 These are further checks the OPG webops team look for.
 
@@ -46,7 +46,7 @@ These are further checks the OPG webops team look for.
             <td style='text-align:left;'>{{ criteria }}</td>
             <td style='text-align:right;'>{{ status }}</td>
         </tr>
-    {% endfor %}
+    {% endfor -%}
     </tbody>
 </table>
 
@@ -67,7 +67,7 @@ General overview about this repository.
             <td style='text-align:left;'>{{ field }}</td>
             <td style='text-align:right;'>{{ val }}</td>
         </tr>
-    {% endfor %}
+    {% endfor -%}
     </tbody>
 </table>
 

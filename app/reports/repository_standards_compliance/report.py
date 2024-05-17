@@ -1,4 +1,5 @@
 import os
+import json
 from datetime import date, datetime, timezone
 from typing import Any
 from pprint import pp
@@ -25,7 +26,12 @@ def single_report(repository:dict) -> str:
     baseline:dict = repository['standards']['baseline']
     extended:dict = repository['standards']['extended']
     information:dict = repository['standards']['information']
+
+    has_passed_baseline:str = "✅" if repository['standards']['status']['baseline'] else "❌"
+    has_passed_extended:str = "✅" if repository['standards']['status']['extended'] else "❌"
     output:str = template.render(now=t,
+                                 has_passed_baseline=has_passed_baseline,
+                                 has_passed_extended=has_passed_extended,
                                  link=link,
                                  name=name,
                                  full_name=full_name,
@@ -64,3 +70,37 @@ def overview_report(repositories:list[dict], duration:str) -> str:
                                  duration=duration,
                                  )
     return output
+
+def generate_reports(repositories:list[dict], duration:str) -> None:
+    """Create the report files for each report"""
+
+    detailed:dict[str] = detailed_reports(repositories=repositories)
+    overview:str = overview_report(repositories=repositories, duration=duration)
+
+    dir:str = __output_directory__
+    # write all the detailed reports
+    for key, report in detailed.items():
+        path:str = f'{dir}{key}'
+        os.makedirs(path, exist_ok=True)
+        with open(f'{path}/index.html.md.erb', 'w+') as f:
+            f.write(report)
+
+    # now the overview
+    path:str = f'{dir}/index.html.md.erb'
+    with open(path, 'w+') as f:
+        f.write(overview)
+
+
+def report(response:dict) -> None:
+    """"""
+
+    repositories:list = response['result']
+    duration:str = response['meta']['timing']['duration']
+
+    dir:str = __output_directory__
+    os.makedirs(dir, exist_ok=True)
+    path:str = f'{dir}/raw.json'
+    with open(path, 'w+') as f:
+        json.dump(response, f, sort_keys=True, indent=2, default=str)
+
+    generate_reports(repositories=repositories, duration=duration)
