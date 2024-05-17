@@ -19,7 +19,7 @@ ArtifactAttributes:dict[str, Callable|None] = {
     'id': None,
     'name': None,
     'archive_download_url': None,
-    'created_at': None,   
+    'created_at': None,
     'workflow_run_id': lambda x: x.workflow_run.id,
 }
 WorkflowRunAttributes:dict[str, Callable|None] = {
@@ -44,15 +44,25 @@ PullRequestAttributes:dict[str, Callable|None] = {
     'merged_at': None,
     'url': None,
 }
-RepositoryAttributes:dict[str, Callable|None] = {
-    # core
-    'id': None,
-    'name': None,
-    'full_name': None,
-    'default_branch': None,
-    'url':  None,    
-    # infomation
-    'description': None,
+# split out some repo fields for ease in checking
+RepositoryBaselineComplianceAttributes:dict[str, Callable|None] = {
+    'default_branch_is_main': lambda r: r.default_branch == 'main',
+    'default_branch_is_protected': lambda r: r.get_branch(r.default_branch).protected,
+    'has_issues': None,
+    'rules_enforced_for_admins': lambda r: r.get_branch(r.default_branch).get_admin_enforcement(),
+    'requires_approval': lambda r: r.get_branch(r.default_branch).get_required_pull_request_reviews().required_approving_review_count > 0,
+    'has_description': lambda r: len(r.description) > 0,
+    'has_license': lambda r: len(r.get_license().license.name) > 0,
+}
+RepositoryExtendedComplianceAttributes:dict[str, Callable|None] = {
+    'requires_code_owner_approval': lambda r: r.get_branch(r.default_branch).get_required_pull_request_reviews().require_code_owner_reviews,
+    'vulnerability_alerts_enabled': lambda r: r.get_vulnerability_alert(),
+    'has_readme': lambda r: len(r.get_contents('./README.md').content) > 0,
+    'has_codeowners_in_github_dir': lambda r: len(r.get_contents('./.github/CODEOWNERS').content) > 0,
+    'has_code_of_conduct': lambda r: len(r.get_contents('./CODE_OF_CONDUCT.md').content) > 0,
+    'has_contributing_guide': lambda r: len(r.get_contents('./CONTRIBUTING.md').content) > 0,
+}
+RepositoryDetailedAttributes:dict[str, Callable|None] = {
     'archived':  None,
     'has_projects':  None,
     'has_pages':  None,
@@ -64,26 +74,21 @@ RepositoryAttributes:dict[str, Callable|None] = {
     'open_pull_request_count': lambda r: r.get_pulls(state='open', sort='created', base=r.default_branch).totalCount,
     'last_commit_date': lambda r: r.get_branch(r.default_branch).commit.commit.committer.date,
     'clone_traffic_count': lambda r: r.get_clones_traffic()['count'],
-    # base compliance
-    'default_branch_is_main': lambda r: r.default_branch == 'main',
-    'default_branch_is_protected': lambda r: r.get_branch(r.default_branch).protected,
-    'has_issues': None,
-    'rules_enforced_for_admins': lambda r: r.get_branch(r.default_branch).get_admin_enforcement(),
-    'requires_approval': lambda r: r.get_branch(r.default_branch).get_required_pull_request_reviews().required_approving_review_count > 0,
-    'has_description': lambda r: len(r.description) > 0,        
-    'has_license': lambda r: len(r.get_license().license.name) > 0,
-    # extended compliance
-    'requires_code_owner_approval': lambda r: r.get_branch(r.default_branch).get_required_pull_request_reviews().require_code_owner_reviews,
-    'vulnerability_alerts_enabled': lambda r: r.get_vulnerability_alert(),
-    'has_readme': lambda r: len(r.get_contents('./README.md').content) > 0,
-    'has_codeowners_in_github_dir': lambda r: len(r.get_contents('./.github/CODEOWNERS').content) > 0,
-    'has_code_of_conduct': lambda r: len(r.get_contents('./CODE_OF_CONDUCT.md').content) > 0,
-    'has_contributing_guide': lambda r: len(r.get_contents('./CONTRIBUTING.md').content) > 0,
 }
-################################################
-# 
-################################################
 
+RepositoryAttributes:dict[str, Callable|None] = {
+    # core
+    'id': None,
+    'name': None,
+    'full_name': None,
+    'default_branch': None,
+    'url':  None,
+    'description': None,
+}
+RepositoryAttributes.update(RepositoryDetailedAttributes)
+RepositoryAttributes.update(RepositoryBaselineComplianceAttributes)
+RepositoryAttributes.update(RepositoryExtendedComplianceAttributes)
+################################################
 __map__: dict = {
     Artifact: ArtifactAttributes,
     WorkflowRun: WorkflowRunAttributes,
@@ -92,12 +97,12 @@ __map__: dict = {
     PullRequest: PullRequestAttributes,
 }
 ################################################
-# 
+#
 ################################################
 
 @timer
 def Local(source:G) -> dict[str, Any]:
-    """Uses the attributes and type of the source to generate a dict of information we want"""    
+    """Uses the attributes and type of the source to generate a dict of information we want"""
     assert isinstance(source, GithubObject)
     t = type(source)
     logging.debug('Localising details', type=t, source=source)
@@ -113,4 +118,3 @@ def Local(source:G) -> dict[str, Any]:
     elif t is WorkflowRun:
         mapped.update({'artifacts': []})
     return mapped
-
