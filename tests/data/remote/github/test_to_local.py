@@ -21,13 +21,13 @@ fake.add_provider(artifact.FakeGithubArtifactProvider)
 @pytest.mark.skipif(os.environ.get('GITHUB_TEST_TOKEN', 0) == 0, reason='Requires github token to run')
 def test_data_remote_github_repository_to_local_using_real_repository():
     """Test the a real repository
-    
+
     Using a fixed point in time, so these resources may be removed due to github data retention policies
     """
-    
+
     g:Github = Github(os.environ.get('GITHUB_TEST_TOKEN'))
-    data = to_local(g=g, 
-                    reopsitory_slug="ministryofjustice/serve-opg",
+    data = to_local(g=g,
+                    repository="ministryofjustice/serve-opg",
                     start=date(year=2024, month=4, day=1),
                     end=date(year=2024, month=4, day=30),
                     get_artifacts=True,
@@ -41,11 +41,11 @@ def test_data_remote_github_repository_to_local_using_real_repository():
     # make sure known pr is in there
     found:bool = False
     known_id = 1845603630
-    for p in data['pull_requests']:        
+    for p in data['pull_requests']:
         if p['id'] == known_id:
             found = True
     assert True == found
-    
+
 @pytest.mark.parametrize(
     "name, start, end",
     [
@@ -55,11 +55,11 @@ def test_data_remote_github_repository_to_local_using_real_repository():
 def test_data_remote_github_repository_to_local_mocked(name:str, start:str, end:str):
     """Test conversion to local repository using faked elements all the way down
 
-    By creating faked versions of associated date we can then check all are mapped over 
-    correctly and test joining between the data sources    
+    By creating faked versions of associated date we can then check all are mapped over
+    correctly and test joining between the data sources
     """
     s:date = to_date(start, format='%Y-%m-%d')
-    e:date = to_date(end, format='%Y-%m-%d')    
+    e:date = to_date(end, format='%Y-%m-%d')
     # out of bound dates
     out_start:date = e + relativedelta(months=2)
     out_end:date = out_start + relativedelta(months=2)
@@ -76,9 +76,9 @@ def test_data_remote_github_repository_to_local_mocked(name:str, start:str, end:
     fake_artifacts = fake.github_artifacts(count=6, lower_date=s, upper_date=e)
     # attach one workflow to an artifact
     fake_artifacts[0] = attach.attach_property(fake_artifacts[0], '_workflow_run', fake_runs[0])
-    
+
     # patch the call to fetch the repo to return a fake serve
-    with patch('app.data.remote.github.to_local.repo', return_value=fake_repo):
+    with patch('app.data.remote.github.to_local.get_repository_by_slug', return_value=fake_repo):
         # patch the teams call so it returns a set number of fakes
         with patch('app.data.remote.github.to_local.teams', return_value=fake_teams):
             # patch finding workflows to return ones with path to live as its name
@@ -89,8 +89,8 @@ def test_data_remote_github_repository_to_local_mocked(name:str, start:str, end:
                     with patch('app.data.remote.github.to_local.artifacts', return_value=fake_artifacts):
                         # now convert!
                         g:Github = Github()
-                        data = to_local(g=g, 
-                                        reopsitory_slug="ministryofjustice/serve-opg",
+                        data = to_local(g=g,
+                                        repository="ministryofjustice/serve-opg",
                                         start=s,
                                         end=e,
                                         get_artifacts=True,
@@ -102,12 +102,10 @@ def test_data_remote_github_repository_to_local_mocked(name:str, start:str, end:
                         assert len(fake_teams) == len(data.get('teams'))
                         assert 'opg' == data.get('teams')[0].get('slug')
                         # workflows - should only get ones in range
-                        assert len(fake_runs_in) == len(data.get('workflow_runs'))                    
+                        assert len(fake_runs_in) == len(data.get('workflow_runs'))
                         # prs
                         assert len(fake_prs) == len(data.get('pull_requests'))
                         # artifacts
                         assert len(fake_artifacts) == len(data.get('artifacts'))
                         # check the joining worked
                         assert 1 == len(data.get('workflow_runs')[0]['artifacts'])
-
-
