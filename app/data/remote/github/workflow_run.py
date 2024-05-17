@@ -49,11 +49,12 @@ def matching_workflow_runs(pattern:str,
     matched:list[WorkflowRun] = []
     repo:str = None
     total:int = len(workflow_runs)
-    for i, wf in enumerate(workflow_runs):        
-        repo = wf.repository.full_name if repo is None else repo
+    for i, wf in enumerate(workflow_runs):
+        if wf.repository is not None and repo is None:        
+            repo = wf.repository.full_name
         pattern_match:bool = bool(re.search(pattern, wf.name.lower())) if pattern is not None else True
         flag:str = "✅" if pattern_match else "❌" 
-        logging.debug(f'[{repo}] (workflow_runs) [{i}/{total}] workflow pattern matched {flag}', pattern=pattern, workflow_run=wf.id, workflow_name=wf.name)     
+        logging.debug(f'[{repo}] (workflow_runs) [{i}+1/{total}] workflow pattern matched {flag}', pattern=pattern, workflow_run=wf.id, workflow_name=wf.name)     
         if pattern_match:            
             matched.append(wf)
     logging.info(f'[{repo}] (workflow_runs) found [{len(matched)}] that match pattern', pattern=pattern)

@@ -8,6 +8,15 @@ fake = Faker()
 
 class FakeGithubWorkflowRunProvider(BaseProvider):
     """Generate fake github item"""
+    def github_workflow_runs(self, count:int = 1,
+                             success:bool = None,
+                             branch:str = 'main',
+                             lower_date:str='-3m',
+                             upper_date:str='-1m', 
+                             real_values:dict={}) -> list[WorkflowRun]:
+        """"""
+        return [self.github_workflow_run(success=success, branch=branch, lower_date=lower_date, upper_date=upper_date, real_values=real_values) for i in range(0, count)]
+
     def github_workflow_run(self, 
                             success:bool = None,
                             branch:str = 'main',

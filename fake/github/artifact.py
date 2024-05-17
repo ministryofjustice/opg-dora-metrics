@@ -8,6 +8,14 @@ fake = Faker()
 
 class FakeGithubArtifactProvider(BaseProvider):
     """Generate fake github item"""
+    def github_artifacts(self, 
+                         count:int = 1,
+                         lower_date:str='-3m',
+                         upper_date:str='-1m',
+                         real_values:dict={}) -> list[Artifact]:
+        """Generate multiple artifacts"""
+        return [self.github_artifact(lower_date=lower_date, upper_date=upper_date, real_values=real_values) for i in range(0,count)]
+
     def github_artifact(self, 
                         lower_date:str='-3m',
                         upper_date:str='-1m',

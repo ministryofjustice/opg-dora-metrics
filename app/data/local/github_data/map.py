@@ -39,7 +39,7 @@ PullRequestAttributes:dict[str, Callable|None] = {
     'id': None,
     'title': None,
     'state': None,
-    'base': None,
+    'base': lambda x: x.base.ref,
     'number': None,
     'merged_at': None,
     'url': None,

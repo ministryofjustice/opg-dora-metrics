@@ -8,6 +8,16 @@ fake = Faker()
 
 class FakeGithubPullRequestProvider(BaseProvider):
     """Generate fake github item"""
+    def github_pull_requests(self, 
+                             count:int = 1,
+                             closed:bool = None,
+                             branch:str = 'main',
+                             lower_date:str='-3m',
+                             upper_date:str='-1m',
+                             real_values:dict={}) -> list[PullRequest]:
+        """Generate multiple fakes"""
+        return [self.github_pull_request(closed=closed, branch=branch, lower_date=lower_date, upper_date=upper_date, real_values=real_values) for i in range(0, count)]
+    
     def github_pull_request(self, 
                             closed:bool = None,
                             branch:str = 'main',
