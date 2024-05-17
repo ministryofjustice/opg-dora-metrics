@@ -11,7 +11,7 @@ from app.data.local.github_data.map import Local
 from app.data.remote.github.to_local import to_local
 
 from faker import Faker
-from fake.github import repository, workflow_run, team, pull_request, artifact
+from fake.github import repository, workflow_run, team, pull_request, artifact, attach
 fake = Faker()
 fake.add_provider(repository.FakeGithubRepositoryProvider)
 fake.add_provider(workflow_run.FakeGithubWorkflowRunProvider)
@@ -77,7 +77,7 @@ def test_data_remote_github_repository_to_local_mocked(name:str, start:str, end:
     fake_prs = fake.github_pull_requests(lower_date=s, upper_date=e)
     fake_artifacts = fake.github_artifacts(count=6, lower_date=s, upper_date=e)
     # attach one workflow to an artifact
-    fake_artifacts[0] = artifact.attach_workflow_run(fake_artifacts[0], fake_runs[0])
+    fake_artifacts[0] = attach.attach_property(fake_artifacts[0], '_workflow_run', fake_runs[0])
     
     # patch the call to fetch the repo to return a fake serve
     with patch('app.data.remote.github.to_local.repo', return_value=fake_repo):

@@ -36,14 +36,3 @@ class FakeGithubArtifactProvider(BaseProvider):
         artifact:Artifact = Artifact(requester=None, headers={}, completed=True, attributes=attributes)
         return artifact
     
-
-def attach_workflow_run(source:Artifact, target:WorkflowRun):
-    """Attach a workflow run to an artifact"""
-    assert isinstance(source, Artifact)
-    assert isinstance(target, WorkflowRun)
-
-    prop = Attribute
-    prop.value = target
-    source._workflow_run = prop
-
-    return source
