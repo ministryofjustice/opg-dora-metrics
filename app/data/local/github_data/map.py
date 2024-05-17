@@ -18,7 +18,7 @@ ArtifactAttributes:dict[str, Callable|None] = {
     'name': None,
     'archive_download_url': None,
     'created_at': None,   
-    'workflow_run': lambda x: DataMap(x.workflow_run, WorkflowRunAttributes)
+    'workflow_run_id': lambda x: x.workflow_run.id,
 }
 WorkflowRunAttributes:dict[str, Callable|None] = {
     'id': None,
@@ -84,7 +84,7 @@ __map__: dict = {
 ################################################
 
 
-def Get(source:G) -> dict[str, Any]:
+def Local(source:G) -> dict[str, Any]:
     """Uses the attributes and type of the source to generate a dict of information we want"""
     assert isinstance(source, GithubObject)
     t = type(source)
@@ -93,4 +93,11 @@ def Get(source:G) -> dict[str, Any]:
         raise Exception(f'Type of source object is not supported: [{t}]')
 
     attrs:dict = __map__[t]
-    return DataMap(source, attrs)
+    mapped:dict = DataMap(source, attrs)
+    # if its a report add some empty fields
+    if t is Repository:
+        mapped.update({'teams':[], 'workflow_runs':[], 'artifacts': [], 'pull_requests': []})
+    elif t is WorkflowRun:
+        mapped.update({'artifacts': []})
+    return mapped
+

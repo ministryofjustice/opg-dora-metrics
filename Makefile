@@ -20,4 +20,4 @@ tests:
 
 # Run a series of tests based on name, setup access token
 test:
-	@env GITHUB_TOKEN="${GITHUB_TOKEN}" LOG_LEVEL=INFO pytest --log-cli-level=INFO -s --disable-warnings ./tests/ -k "$(names)"
+	@env GITHUB_TEST_TOKEN="${GITHUB_TOKEN}" LOG_LEVEL=INFO pytest --log-cli-level=INFO -s --disable-warnings ./tests/ -k "$(names)"
