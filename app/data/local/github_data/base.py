@@ -13,24 +13,24 @@ def DataMap(source:G, map:dict[str, Callable|None]) -> dict[str, Any]:
     otherwise a direct mapp to attribute is tried
     """
     logging.debug('Data mapping', source=source, map=map)
+    raw:dict[str, Any] = {}
 
-    source_data:dict[str, Any] = vars(source)
-    raw:dict[str, Any] = source_data['_rawData']
-
+    if source is not None and getattr(source, '__dict__') is not None:    
+        source_data:dict[str, Any] = vars(source)
+        raw:dict[str, Any] = source_data['_rawData']
+    
     result: dict = {}
     for attr, f in map.items():
         value:Any = None
-        try:
-            if isinstance(f, FunctionType):
-                logging.debug(f'mapping [{attr}] as a function', f=f)
+        is_func:bool = isinstance(f, FunctionType)
+        if is_func:
+            try:
                 value = f(source)
-            else:
-                logging.debug(f'mapping [{attr}] as an attribute')
-                value = raw.get(attr, None)
-        except Exception as e:
-            logging.debug(f'failed to map data', attr=attr, exception=e)
-            value = None
-        logging.debug(f'mapped [{attr}] to [{value}]')
+            except:
+                pass
+        else:
+            value = raw.get(attr, None)
+        logging.debug(f'mapped [{attr}] to [{value}]', is_function=is_func, f=f)
         result[attr] = value
 
     return result
