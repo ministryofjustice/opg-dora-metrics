@@ -22,7 +22,10 @@ fake.add_provider(artifact.FakeGithubArtifactProvider)
 
 @pytest.mark.skipif(os.environ.get('GITHUB_TEST_TOKEN', 0) == 0, reason='Requires github token to run')
 def test_data_remote_github_repository_to_local_using_real_repository():
-    """Test the a real repository"""
+    """Test the a real repository
+    
+    Using a fixed point in time, so these resources may be removed due to github data retention policies
+    """
     
     g:Github = Github(os.environ.get('GITHUB_TEST_TOKEN'))
     data = to_local(g=g, 
@@ -33,8 +36,8 @@ def test_data_remote_github_repository_to_local_using_real_repository():
                     get_pull_requests=True,
                     )
     # test against real world known values
-    assert 23 == len(data.get('workflow_runs'))
-    assert 23 == len(data.get('artifacts'))
+    assert 21 == len(data.get('workflow_runs'))
+    assert 21 == len(data.get('artifacts'))
     assert False == data['archived']
     assert 'main' == data['default_branch']
     # make sure known pr is in there
