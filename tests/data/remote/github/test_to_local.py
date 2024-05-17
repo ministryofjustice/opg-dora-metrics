@@ -5,9 +5,7 @@ from datetime import date
 from pprint import pp
 from dateutil.relativedelta import relativedelta
 from github import Github
-from github.Repository import Repository
 from app.utils.dates.convert import to_date
-from app.data.local.github_data.map import Local
 from app.data.remote.github.to_local import to_local
 
 from faker import Faker

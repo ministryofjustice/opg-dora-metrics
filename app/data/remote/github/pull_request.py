@@ -28,7 +28,6 @@ def merged_pull_requests(repository:Repository, branch:str, start:date, end:date
 
     lower:datetime = to_datetime(start)
     upper:datetime = to_datetime(end)
-    last_date:datetime = None
 
     for i, pr in enumerate(all):        
         merged:bool = pr.merged        
@@ -40,11 +39,6 @@ def merged_pull_requests(repository:Repository, branch:str, start:date, end:date
         # attach to matched when its in range
         if merged and in_range:
             matched.append(pr)
-        # if the last_date is before start, then we can stop here as results are returned in date order
-        if last_date is not None and last_date < lower:
-            logging.info(f'[{repo}] (pull_requests) skipping remaining pull_requests', start=start, end=end)
-            break
-        last_date = pr.merged_at
-
+        
     logging.info(f'[{repo}] (pull_requests) found [{len(matched)}] within date range', start=start, end=end)
     return matched
