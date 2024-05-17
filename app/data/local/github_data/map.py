@@ -74,6 +74,7 @@ RepositoryDetailedAttributes:dict[str, Callable|None] = {
     'open_pull_request_count': lambda r: r.get_pulls(state='open', sort='created', base=r.default_branch).totalCount,
     'last_commit_date': lambda r: r.get_branch(r.default_branch).commit.commit.committer.date.isoformat(),
     'clone_traffic_count': lambda r: r.get_clones_traffic()['count'],
+    'private': None,
 }
 
 RepositoryAttributes:dict[str, Callable|None] = {

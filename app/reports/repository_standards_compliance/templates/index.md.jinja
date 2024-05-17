@@ -1,0 +1,110 @@
+---
+title: Repository standards
+last_reviewed_on: {{ now }}
+review_in: 3 months
+---
+# <%= current_page.data.title %>
+
+Lists both public and private MoJ GitHub repositories which are and are not fully compliant with [MoJ standards](https://user-guide.operations-engineering.service.justice.gov.uk/documentation/information/mojrepostandards.html) as a baseline and OPG extended requirements.
+
+[Operations Engineering report](https://operations-engineering-reports.cloud-platform.service.justice.gov.uk/home).
+
+*Published on {{ now }} in {{ duration }}*
+
+
+### Totals:
+
+- **Passed baseline checks**: {{ baseline_passed }} / {{ total }}
+- **Passed extended checks**: {{ extended_passed }} / {{ total }}
+
+### Key:
+
+- **B**: Baseline compliance, see also [Operations Engineering report](https://operations-engineering-reports.cloud-platform.service.justice.gov.uk/home).
+- **E**: Extended compliance - covers additional areas we want to check for in OPG
+
+<table style='width:100%' class='compliance-table' id='dataset'>
+    <tr>
+        <th colspan='2' style='border:0;'></th>
+        <th title='Baseline compliance' style='text-align:center;border:0;'>B</th>
+        <th title='Extended compliance' style='text-align:center;border:0;'>E</th>
+    </tr>
+    {% for item in repositories -%}
+    <tr>
+        <td class="expand " rowspan='3' valign='top' style='border:0; border-top:1px solid rgb(177, 180, 182);'>
+            <strong data-toggle='detail-{{ item['name'] }}' class="toggler govuk-tag govuk-tag--blue" style='display:block; width:20px; text-align:center; cursor:pointer' title='Show/Hide details'>+</strong>
+        </td>
+        <th style='width:88%; border:0; border-top:1px solid rgb(177, 180, 182);'>
+            <a href='https://github.com/{{ item['full_name'] }}' class="toggler govuk-link govuk-task-list__link">{% if item['archived']%}(ARCHIVED) {% endif %}{{ item['name'] }}</a>
+        </th>
+        <td rowspan='3' valign='top' style='border:0; border-top:1px solid rgb(177, 180, 182);'>
+            {% if item['standards']['status']['baseline'] -%}
+            <strong class="govuk-tag govuk-tag--green" style='display:block; width:20px; text-align:center;' title='baseline compliance passed'>✓</strong>
+            {% else -%}
+            <strong class="govuk-tag govuk-tag--red" style='display:block; width:20px; text-align:center;' title='baseline compliance failed'>X</strong>
+            {% endif %}
+        </td>
+        <td rowspan='3' valign='top' style='border:0; border-top:1px solid rgb(177, 180, 182);'>
+            {% if item['standards']['status']['extended'] -%}
+            <strong class="govuk-tag govuk-tag--green" style='display:block; width:20px; text-align:center;' title='extended compliance passed'>✓</strong>
+            {% else -%}
+            <strong class="govuk-tag govuk-tag--red" style='display:block; width:20px; text-align:center;' title='extended compliance failed'>X</strong>
+            {% endif %}
+        </td>
+    </tr>
+    <tr class='details'>
+        <td style='display:none; border:0;' class='detail-{{ item['name'] }}'>
+            {% for attr, val in item['standards']['information'].items() -%}
+                <strong class='govuk-tag govuk-tag--grey' style='margin-bottom:5px; margin-right:5px; font-size:0.7rem; background-color:transparent;width:310px;'>{{ attr }}:</strong>
+                <strong class='govuk-tag govuk-tag--grey' style='margin-bottom:5px; margin-right:5px; font-size:0.7rem;background-color:transparent;width:200px;text-align:right'>{{ val }}</strong>
+            {% endfor %}
+        </td>
+    </td>
+    <tr class='details'>
+        <td style='display:none;border:0;' class='detail-{{ item['name'] }}'>
+            {% for attr, val in item['standards']['baseline'].items() -%}
+                {% if val -%}
+                <strong class="govuk-tag govuk-tag--green" style='margin-bottom:5px; margin-right:5px; font-size:0.7rem;'>[B] {{ attr }}</strong>
+                {% else -%}
+                <strong class="govuk-tag govuk-tag--red" style='margin-bottom:5px; margin-right:5px; font-size:0.7rem;'>[B] {{ attr }}</strong>
+                {% endif -%}
+            {% endfor %}
+            {% for attr, val in item['standards']['extended'].items() -%}
+                {% if val -%}
+                <strong class="govuk-tag govuk-tag--green" style='margin-bottom:5px; margin-right:5px; font-size:0.7rem;'>[E] {{ attr }}</strong>
+                {% else -%}
+                <strong class="govuk-tag govuk-tag--red" style='margin-bottom:5px; margin-right:5px; font-size:0.7rem;'>[E] {{ attr }}</strong>
+                {% endif -%}
+            {% endfor %}
+            <strong class="govuk-tag govuk-tag--yellow" style='margin-bottom:5px; margin-right:5px; font-size:0.7rem;'>License: {{ item['license_name'] }}</strong>
+        </td>
+    </tr>
+    {% endfor %}
+
+</table>
+
+
+*Created by [opg-dora-metrics](https://github.com/ministryofjustice/opg-dora-metrics)*
+
+
+<script>
+
+[].forEach.call( document.querySelectorAll( ".toggler" ), function ( ele ) {
+    ele.addEventListener('click', function(eve){
+        var toggleDisplay = eve.target.dataset.toggle;
+
+        [].forEach.call( document.querySelectorAll('.'+toggleDisplay), function(info) {
+            if (info.style.display == 'none') {
+                info.style.display = 'block'
+            } else {
+                info.style.display = 'none'
+            }
+            return false
+        })
+
+        return false
+    }, false)
+} )
+
+
+
+</script>

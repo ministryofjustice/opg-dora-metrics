@@ -1,0 +1,75 @@
+---
+title: Repository standards compliance for {{ name }}
+last_reviewed_on: {{ now }}
+review_in: 3 months
+---
+# <%= current_page.data.title %>
+
+Breakdown of how [{{ name }}]({{ link }}) meets compliance standards.
+
+## Baseline
+
+These standards are a mirror from [Operations Engineering](https://user-guide.operations-engineering.service.justice.gov.uk/documentation/information/mojrepostandards.html).
+
+View Operations Engineering [version of this report]({{ report_link }}).
+
+<table>
+    <thead>
+        <tr>
+            <th style='text-align:left;'>Criteria</th>
+            <th style='text-align:right;'>Passed</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for criteria, status in baseline.items() -%}
+<tr>
+<td style='text-align:left;'>{{ criteria }}</td><td style='text-align:right;'>{{ status }}</td>
+</tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+## Extended checks
+
+These are further checks the OPG webops team look for.
+
+<table>
+    <thead>
+        <tr>
+            <th style='text-align:left;'>Criteria</th>
+            <th style='text-align:right;'>Passed</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for criteria, status in extended.items() -%}
+        <tr>
+            <td style='text-align:left;'>{{ criteria }}</td>
+            <td style='text-align:right;'>{{ status }}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+## Information
+
+General overview about this repository.
+
+<table>
+    <thead>
+        <tr>
+            <th style='text-align:left;'>Field</th>
+            <th style='text-align:right;'>Value</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for field, val in information.items() -%}
+        <tr>
+            <td style='text-align:left;'>{{ field }}</td>
+            <td style='text-align:right;'>{{ val }}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+
+*Created by [opg-dora-metrics](https://github.com/ministryofjustice/opg-dora-metrics)*

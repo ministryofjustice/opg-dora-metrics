@@ -20,6 +20,7 @@ class FakeGithubDataRepositoryProvider(BaseProvider):
             'full_name': f'{fake.word()}/{name}',
             'branch': branch,
             'default_branch': branch,
+            'private': False,
             'url': fake.uri(),
         }
         if len(real_values.keys()) > 0:
