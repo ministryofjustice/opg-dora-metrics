@@ -7,7 +7,7 @@ from pprint import pp
 from github import Github
 from github.Repository import Repository
 from app.data.remote.github.repository import repositories_for_org_and_team, repositories_from_slugs
-from app.data.remote.github.to_local import to_local
+from app.data.remote.github.localise import to_local
 from app.utils.dates.duration import duration
 from app.reports.github_deployment_frequency.report import report
 from app.log.logger import logging
@@ -68,20 +68,20 @@ def main() :
     total:int = len(repositories)
     for i, repo in enumerate(repositories):
         logging.info(f'[{i+1}/{total}] [{repo.full_name}] converting to local store')
-        # get workflows and fallback to prs
-        local:dict = to_local(g=g,
-                              repository=repo,
-                              start=start,
-                              end=end,
-                              get_teams=True,
-                              get_artifacts=False,
-                              get_pull_requests=False,
-                              get_workflow_runs=True,
-                              workflow_run_pattern=pattern,
-                              workflow_run_status='success',
-                              pull_request_fallback=True)
+        # # get workflows and fallback to prs
+        # local:dict = to_local(g=g,
+        #                       repository=repo,
+        #                       start=start,
+        #                       end=end,
+        #                       get_teams=True,
+        #                       get_artifacts=False,
+        #                       get_pull_requests=False,
+        #                       get_workflow_runs=True,
+        #                       workflow_run_pattern=pattern,
+        #                       workflow_run_status='success',
+        #                       pull_request_fallback=True)
 
-        localised.append(local)
+        # localised.append(local)
 
 
     end_time:datetime = datetime.now(timezone.utc)
@@ -104,7 +104,7 @@ def main() :
         },
         'result': localised
     }
-    report(response=response)
+    #  report(response=response)
     # logging.info(f'[Deployment Frequency] completed in [{dur}].')
 
 

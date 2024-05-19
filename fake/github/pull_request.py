@@ -2,6 +2,7 @@ from datetime import date
 from pprint import pp
 
 from github.PullRequest import PullRequest
+from github.PullRequestPart import PullRequestPart
 
 from faker import Faker
 from faker.providers import BaseProvider
@@ -32,6 +33,7 @@ class FakeGithubPullRequestProvider(BaseProvider):
             'id': fake.random_number(),
             'title': fake.word(),
             'state': 'closed' if closed else 'open',
+            'merged': True,
             'base': branch,
             'number': fake.random_number(),
             'merged_at': created,
@@ -41,3 +43,17 @@ class FakeGithubPullRequestProvider(BaseProvider):
             attributes.update(real_values)
         pull_request:PullRequest = PullRequest(requester=None, headers={}, completed=True, attributes=attributes)
         return pull_request
+
+    def github_pull_request_base(self,
+                                 real_values:dict = {}) -> PullRequestPart:
+        """Return a fake part pr"""
+
+        attributes:dict = {
+            'ref': fake.word(),
+            'label': fake.slug(),
+            'sha': fake.sha256(),
+        }
+        if len(real_values.keys()) > 0:
+            attributes.update(real_values)
+        part:PullRequestPart = PullRequestPart(requester=None, headers={}, completed=True, attributes=attributes)
+        return part

@@ -4,6 +4,8 @@ from datetime import date, datetime, timezone
 from typing import Any
 from pprint import pp
 from jinja2 import Environment, FileSystemLoader, Template
+from app.data.local.standards.repository_standards_compliance import repository_standards
+
 
 __output_directory__:str = './outputs/github_repository_standards/'
 __template_directory__:str = './app/reports/github_repository_standards/templates/'
@@ -60,6 +62,7 @@ def overview_report(repositories:list[dict], duration:str) -> str:
     baseline_passed:int = 0
     extended_passed:int = 0
     for r in repositories:
+
         baseline_passed += 1 if r['standards']['status']['baseline'] is True else 0
         extended_passed += 1 if r['standards']['status']['extended'] is True else 0
     output:str = template.render(now=t,
@@ -93,9 +96,12 @@ def generate_reports(repositories:list[dict], duration:str) -> None:
 
 def report(response:dict) -> None:
     """"""
-
-    repositories:list = response['result']
+    repositories:list = response['repositories']
     duration:str = response['meta']['timing']['duration']
+
+    # add in standards data
+    for r in repositories:
+        r['standards'] = repository_standards(local_repository=r)
 
     dir:str = __output_directory__
     os.makedirs(dir, exist_ok=True)

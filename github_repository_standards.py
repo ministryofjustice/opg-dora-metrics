@@ -8,8 +8,7 @@ from pprint import pp
 from github import Github
 from github.Repository import Repository
 from app.data.remote.github.repository import repositories_for_org_and_team, repositories_from_slugs
-from app.data.remote.github.to_local import to_local
-from app.data.local.standards.repository_standards_compliance import repository_standards
+from app.data.remote.github.localise import localise_repo
 from app.utils.dates.duration import duration
 from app.log.logger import logging
 from app.reports.github_repository_standards.report import report
@@ -55,20 +54,10 @@ def main() :
     total:int = len(repositories)
     for i, repo in enumerate(repositories):
         logging.info(f'[{i+1}/{total}] [{repo.full_name}] converting to local store')
-        # turn off the extended data like prs / workflows
-        local:dict = to_local(g=g,
-                              repository=repo,
-                              start=None,
-                              end=None,
-                              get_teams=False,
-                              get_artifacts=False,
-                              get_pull_requests=False,
-                              get_workflow_runs=False,
-                              pull_request_fallback=False)
-        # now we have them localised, get there standards data
-        local['standards'] = repository_standards(local)
-        localised.append(local)
+        local_repo:dict = localise_repo(repository=repo)
+        localised.append(local_repo)
 
+    pp(localised)
     end_time:datetime = datetime.now(timezone.utc)
     logging.info(f'[Standards Compliance] generating report documents')
     dur:str = duration(start=start_time, end=end_time)
@@ -81,7 +70,7 @@ def main() :
                 'duration': dur,
             },
         },
-        'result': localised
+        'repositories': localised
     }
     report(response=response)
     logging.info(f'[Standards Compliance] completd in [{dur}].')

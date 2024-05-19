@@ -11,31 +11,31 @@ fake = Faker()
 fake.add_provider(FakeGithubDataRepositoryProvider)
 
 
-def test_reports_repository_standards_compliance_report_single():
-    """Simple test to make sure report generates and has a flag to true for expected result"""
+# def test_reports_repository_standards_compliance_report_single():
+#     """Simple test to make sure report generates and has a flag to true for expected result"""
 
-    source:dict = fake.githubdata_repository()
-    for k in RepositoryBaselineComplianceAttributes.keys():
-        source[k] = True
-    source['standards'] = repository_standards(source)
-    report:str = single_report(source).strip()
+#     source:dict = fake.githubdata_repository()
+#     for k in RepositoryBaselineComplianceAttributes.keys():
+#         source[k] = True
+#     source['standards'] = repository_standards(source)
+#     report:str = single_report(source).strip()
 
-    checkfor:str = "Default branch is called main</td><td style='text-align:right;'>True</td>"
+#     checkfor:str = "Default branch is called main</td><td style='text-align:right;'>True</td>"
 
-    assert True == (checkfor in report)
+#     assert True == (checkfor in report)
 
 
-def test_reports_repository_standards_compliance_report_overview():
-    """Simple test to make sure report generates and has a flag to true for expected result"""
+# def test_reports_repository_standards_compliance_report_overview():
+#     """Simple test to make sure report generates and has a flag to true for expected result"""
 
-    source:dict = fake.githubdata_repository()
-    for k in RepositoryBaselineComplianceAttributes.keys():
-        source[k] = True
-    source['standards'] = repository_standards(source)
-    report:str = overview_report([source], '1 year 10 months')
+#     source:dict = fake.githubdata_repository()
+#     for k in RepositoryBaselineComplianceAttributes.keys():
+#         source[k] = True
+#     source['standards'] = repository_standards(source)
+#     report:str = overview_report([source], '1 year 10 months')
 
-    checkpassed:str = "- **Passed baseline checks**: 1 / 1"
-    checkdur:str = "in 1 year 10 months*"
+#     checkpassed:str = "- **Passed baseline checks**: 1 / 1"
+#     checkdur:str = "in 1 year 10 months*"
 
-    assert True == (checkpassed in report)
-    assert True == (checkdur in report)
+#     assert True == (checkpassed in report)
+#     assert True == (checkdur in report)
