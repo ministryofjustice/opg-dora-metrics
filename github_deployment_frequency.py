@@ -6,10 +6,11 @@ from dateutil.relativedelta import relativedelta
 from pprint import pp
 from github import Github
 from github.Repository import Repository
+from app.reports.writer import writer
 from app.data.remote.github.repository import repositories_for_org_and_team, repositories_from_slugs
-from app.data.remote.github.localise import to_local
+from app.data.remote.github.localise import localise_repo, localise_pull_requests, localise_workflow_runs, localise_teams
 from app.utils.dates.duration import duration
-from app.reports.github_deployment_frequency.report import report
+from app.reports.github_deployment_frequency.report import reports
 from app.log.logger import logging
 
 
@@ -46,6 +47,7 @@ def main() :
     #### fetch the repositories
     start_time:datetime = datetime.now(timezone.utc)
     repositories:list[Repository] = []
+
     if args.org_team is not None:
         org, team = map(str, args.org_team.split(':'))
         repositories = repositories_for_org_and_team(g=g,
@@ -62,50 +64,55 @@ def main() :
     start:date = end - relativedelta(months=int(args.duration))
     start = start.replace(day=1)
     pattern:str = ' live$'
+    branch:str = 'main'
 
     # now convert them!
     localised:list[dict] = []
+    # could be prs or workflows
+    local_deployments:list = []
+    local_teams:list = []
+
     total:int = len(repositories)
     for i, repo in enumerate(repositories):
         logging.info(f'[{i+1}/{total}] [{repo.full_name}] converting to local store')
-        # # get workflows and fallback to prs
-        # local:dict = to_local(g=g,
-        #                       repository=repo,
-        #                       start=start,
-        #                       end=end,
-        #                       get_teams=True,
-        #                       get_artifacts=False,
-        #                       get_pull_requests=False,
-        #                       get_workflow_runs=True,
-        #                       workflow_run_pattern=pattern,
-        #                       workflow_run_status='success',
-        #                       pull_request_fallback=True)
+        # get local details
+        local, _ = localise_repo(repository=repo)
+        teams, _ = localise_teams(repository=repo)
+        localised.append(local)
+        # get the workflow / pr data
+        deploys, _ = localise_workflow_runs(repository=repo,
+                                                 start=start,
+                                                 end=end,
+                                                 branch=branch,
+                                                 pattern=pattern)
+        if len(deploys) <= 0:
+            logging.warn(f'[{i+1}/{total}] [{repo.full_name}] using pull requests as a proxy')
+            deploys, _ = localise_pull_requests(repository=repo,
+                                                start=start, end=end, branch=branch)
 
-        # localised.append(local)
-
+        local_teams += teams
+        local_deployments += deploys
 
     end_time:datetime = datetime.now(timezone.utc)
     dur:str = duration(start=start_time, end=end_time)
+    timings:dict = {'start': start_time.isoformat(),
+                    'end': end_time.isoformat(),
+                    'duration': dur}
+
     logging.info(f'[Deployment Frequency] generating report documents')
 
-    response:dict = {
-        'meta': {
-            'args': args.__dict__,
-            'timing': {
-                'start': start_time.isoformat(),
-                'end': end_time.isoformat(),
-                'duration': dur,
-            },
-            'report': {
-                'pattern': pattern,
-                'start': start.isoformat(),
-                'end': end.isoformat(),
-            },
-        },
-        'result': localised
-    }
-    #  report(response=response)
-    # logging.info(f'[Deployment Frequency] completed in [{dur}].')
+    report_data:dict = reports(repositories=localised,
+                               args=args.__dict__,
+                               start=start,
+                               end=end,
+                               timings=timings,
+                               deployments=local_deployments,
+                               teams=local_teams)
+
+    output_dir:str = './outputs/github_deployment_frequency/'
+
+    writer(report_data=report_data, output_dir=output_dir)
+    logging.info(f'[Deployment Frequency] completed in [{dur}].')
 
 
 if __name__ == "__main__":

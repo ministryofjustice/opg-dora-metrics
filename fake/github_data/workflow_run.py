@@ -30,7 +30,8 @@ class FakeGithubDataWorkflowRunProvider(BaseProvider):
             'created_at': created,
             'conclusion': 'success' if success else 'failure',
             'head_branch': branch,
-            'name': fake.word()
+            'name': fake.word(),
+            'date': created,
         }
         if len(real_values.keys()) > 0:
             attributes.update(real_values)

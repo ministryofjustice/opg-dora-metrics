@@ -16,12 +16,7 @@ class FakeGithubDataTeamProvider(BaseProvider):
         attributes:dict = {
             'name': name,
             'id': fake.random_number(),
-            'slug': name,
-            'parent': {
-                'name': name,
-                'id': fake.random_number(),
-                'slug': name,
-            }
+            'slug': name
         }
         if len(real_values.keys()) > 0:
             attributes.update(real_values)

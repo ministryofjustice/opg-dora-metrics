@@ -34,6 +34,7 @@ class FakeGithubDataPullRequestProvider(BaseProvider):
             'number': fake.random_number(),
             'merged_at': created,
             'url': fake.uri(),
+            'date': created,
         }
         if len(real_values.keys()) > 0:
             attributes.update(real_values)

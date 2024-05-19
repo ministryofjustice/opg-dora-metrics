@@ -22,6 +22,7 @@ ArtifactAttributes:dict[str, Callable|None] = {
     'created_at': None,
     'workflow_run_id': lambda x: x.workflow_run.id,
     'repository_id': lambda x: x.workflow_run.repository.id,
+    'date': lambda x: x.created_at,
 }
 WorkflowRunAttributes:dict[str, Callable|None] = {
     'id': None,
@@ -29,13 +30,15 @@ WorkflowRunAttributes:dict[str, Callable|None] = {
     'conclusion': None,
     'head_branch': None,
     'created_at': None,
-    'repository_id': lambda x: x.repository.id
+    'repository_id': lambda x: x.repository.id,
+    'date': lambda x: x.created_at,
 }
 TeamAttributes:dict[str, Callable|None] = {
     'id': None,
     'name': None,
     'slug': None,
     'parent_id': lambda x:  x.parent.id,
+    'repository_ids': lambda x: [r.id for r in x.get_repos()]
 }
 PullRequestAttributes:dict[str, Callable|None] = {
     'id': None,
@@ -46,7 +49,8 @@ PullRequestAttributes:dict[str, Callable|None] = {
     'merged': None,
     'merged_at': None,
     'url': None,
-    'repository_id': lambda x: x.base.repo.id
+    'repository_id': lambda x: x.base.repo.id,
+    'date': lambda x: x.merged_at
 }
 # split out some repo fields for ease in checking
 RepositoryBaselineComplianceAttributes:dict[str, Callable|None] = {

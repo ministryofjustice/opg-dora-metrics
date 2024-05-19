@@ -9,16 +9,16 @@ G = TypeVar('G', bound=GithubObject)
 @timer
 def DataMap(source:G, map:dict[str, Callable|None]) -> dict[str, Any]:
     """Use a map of attributes passed to generate a dict of data
-    Key of the dict if the field name, if the value is a function that is called, 
+    Key of the dict if the field name, if the value is a function that is called,
     otherwise a direct mapp to attribute is tried
     """
     logging.debug('Data mapping', source=source, map=map)
     raw:dict[str, Any] = {}
 
-    if source is not None and getattr(source, '__dict__') is not None:    
+    if source is not None and getattr(source, '__dict__') is not None:
         source_data:dict[str, Any] = vars(source)
         raw:dict[str, Any] = source_data['_rawData']
-    
+
     result: dict = {}
     for attr, f in map.items():
         value:Any = None
@@ -33,4 +33,5 @@ def DataMap(source:G, map:dict[str, Callable|None]) -> dict[str, Any]:
         logging.debug(f'mapped [{attr}] to [{value}]', is_function=is_func, f=f)
         result[attr] = value
 
+    result['__class__'] = source.__class__.__name__
     return result

@@ -1,0 +1,43 @@
+---
+title: Releases per team, per month
+last_reviewed_on: {{ now }}
+review_in: 3 months
+---
+# <%= current_page.data.title %>
+
+Releases per month for each github team.
+
+*Published on {{ now }} in {{ duration }}*
+
+<table class='dataframe'>
+    <thead>
+        <tr>
+            <th align='left' rowspan='2'></th>
+            {% for month in months -%}
+            <th align='right' colspan='2'>{{ month  }}</th>
+            {% endfor -%}
+        </tr>
+        <tr>
+            {% for month in months -%}
+            <th title="Total for {{ month }}">T</th>
+            <th title="Average per weekday for {{ month }}">A</th>
+            {% endfor -%}
+        </tr>
+    </thead>
+    <tbody>
+    {% for team, item in by_team.items() -%}
+        <tr>
+            <th align='left'>{{ team }}</th>
+            {% for m in months -%}
+            {% set total, avger = item.get(m) -%}
+            <td align='right' title="Total for {{ m }}">{{ total  }}</td>
+            <td align='right' title="Average per weekday for {{ m }}">{{ "%0.1f" | format(avger) }}</td>
+            {% endfor -%}
+        </tr>
+    {% endfor -%}
+    </tr>
+    </tbody>
+</table>
+
+
+*Created by [opg-dora-metrics](https://github.com/ministryofjustice/opg-dora-metrics)*

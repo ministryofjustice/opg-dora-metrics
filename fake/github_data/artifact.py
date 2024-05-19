@@ -26,6 +26,7 @@ class FakeGithubDataArtifactProvider(BaseProvider):
             'created_at': created,
             'name': fake.word(),
             'archive_download_url': fake.uri(),
+            'date': created,
         }
         if len(real_values.keys()) > 0:
             attributes.update(real_values)

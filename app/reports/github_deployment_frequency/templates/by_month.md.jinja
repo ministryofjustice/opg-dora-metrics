@@ -18,11 +18,12 @@ Releases per month for all OPG owned repositories.
         </tr>
     </thead>
     <tbody>
-    {% for month, item in by_month.items() -%}
+    {% for month, values in by_month.items() -%}
+        {% set total, avger = values -%}
         <tr>
             <th align='left'>{{ month }}</th>
-            <td align='right'>{{ item.get('total', 0 )  }}</td>
-            <td align='right'>{{ item.get('average_per_day', 0.0) | round(2) }}</td>
+            <td align='right'>{{ total }}</td>
+            <td align='right'>{{ avger | round(2) }}</td>
         </tr>
     {% endfor %}
     </tbody>
