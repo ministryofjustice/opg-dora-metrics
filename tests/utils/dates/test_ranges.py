@@ -2,8 +2,8 @@ import pytest
 from datetime import datetime, date
 from pprint import pp
 
-from app.utils.dates.ranges import date_range, Increment, date_range_as_strings
-from app.utils.dates.convert import to_date
+from app.dates.ranges import date_range, Increment, date_range_as_strings
+from app.dates.convert import to_date
 
 ################################################
 # Tests
@@ -27,9 +27,9 @@ from app.utils.dates.convert import to_date
     ]
 )
 def test_utils_ranges_date_range(lower:str, upper:str, format:str, interval:Increment, expected:int):
-    """Test that """    
+    """Test that """
     dates:list[date] = date_range(to_date(lower, format), to_date(upper, format), interval)
     strings:list[date] = date_range_as_strings(to_date(lower, format), to_date(upper, format), interval)
-    
+
     assert expected == len(dates)
     assert expected == len(strings)

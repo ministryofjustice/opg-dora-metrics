@@ -28,7 +28,7 @@ def date_range(start:date, end:date, inc:Increment = Increment.MONTH) -> list[da
         i = i.replace(month=1)
     elif inc == Increment.MONTH:
         i = i.replace(day=1)
-    
+
     key:str = __increments__[inc.value]['increment']
     by:dict = {key: 1}
     while i <= e:
@@ -41,5 +41,5 @@ def date_range(start:date, end:date, inc:Increment = Increment.MONTH) -> list[da
 def date_range_as_strings(start:date, end:date, inc:Increment = Increment.MONTH) -> list[str]:
     """Creates a list of strings from the start to end date"""
     date_items:list[date] = date_range(start=start, end=end, inc=inc)
-    format:str = __increments__[inc.value]['format']    
+    format:str = __increments__[inc.value]['format']
     return [i.strftime(format) for i in date_items]

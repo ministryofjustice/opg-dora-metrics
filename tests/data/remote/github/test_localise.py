@@ -11,7 +11,7 @@ from github.Artifact import Artifact
 from github.WorkflowRun import WorkflowRun
 from github.PullRequest import PullRequest
 from github.PullRequestPart import PullRequestPart
-from app.utils.dates.convert import to_date
+from app.dates.convert import to_date
 from app.data.remote.github.localise import localise_artifacts,localise_pull_requests,localise_teams,localise_workflow_runs, localise_repo
 
 from faker import Faker

@@ -3,8 +3,8 @@ from datetime import date, datetime
 from github import Github
 from github.Repository import Repository
 from github.PullRequest import PullRequest
-from app.utils.dates.convert import to_datetime
-from app.utils.dates.between import between
+from app.dates.convert import to_datetime
+from app.dates.between import between
 from app.log.logger import logging
 from app.decorator import timer
 
