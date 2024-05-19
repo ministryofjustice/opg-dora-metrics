@@ -12,19 +12,20 @@ Releases per month for each repository.
 <table class='dataframe'>
     <thead>
         <tr>
-            <th align='left' rowspan='2'></th>
+            <th align='left'></th>
             {% for month in months -%}
             <th align='right' colspan='2'>{{ month  }}</th>
             {% endfor -%}
         </tr>
+    </thead>
+    <tbody>
         <tr>
+            <td></td>
             {% for month in months -%}
             <th title="Total for {{ month }}">T</th>
             <th title="Average per weekday for {{ month }}">A</th>
             {% endfor -%}
         </tr>
-    </thead>
-    <tbody>
     {% for repo, item in by_repo.items() -%}
         <tr>
             <th align='left' valign="top">
