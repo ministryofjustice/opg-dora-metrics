@@ -100,9 +100,7 @@ def test_data_remote_github_localise_pull_requests():
     out_end:date = out_start + relativedelta(months=2)
 
     repo:Repository = fake.github_repository(real_values={'full_name':'opg/test', 'name': 'test'})
-    prs_in:list[PullRequest] = fake.github_pull_requests(lower_date=s, upper_date=e)
-    prs_out:list[PullRequest] = fake.github_pull_requests(lower_date=out_start, upper_date=out_end)
-    prs:list[PullRequest] = prs_in + prs_out
+    prs:list[PullRequest] = fake.github_pull_requests(lower_date=s, upper_date=e)
     base:PullRequestPart = fake.github_pull_request_base()
 
     # attach the repo to the base
@@ -113,7 +111,7 @@ def test_data_remote_github_localise_pull_requests():
 
     # overwrite the call to fetch all prs with one that will return our fake data including out or range
     # prs so we can check they are filtered
-    with patch('app.data.remote.github.pull_request.__pull_requests__', return_value=prs):
+    with patch('app.data.remote.github.pull_request.__pull_requests_in_range__', return_value=prs):
         l, all = localise_pull_requests(repository=repo, start=s, end=e)
         assert len(prs_in) == len(l)
         assert len(prs_in) == len(all)

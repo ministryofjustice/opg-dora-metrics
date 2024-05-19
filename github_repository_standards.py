@@ -10,7 +10,7 @@ from github import Github
 from github.Repository import Repository
 from app.data.remote.github.repository import repositories_for_org_and_team, repositories_from_slugs
 from app.data.remote.github.localise import localise_repo
-from app.utils.dates.duration import duration
+from app.dates.duration import duration
 from app.log.logger import logging
 from app.reports.github_repository_standards.report import reports
 from app.reports.writer import writer
@@ -55,9 +55,14 @@ def main() :
     localised:list[dict] = []
     total:int = len(repositories)
     for i, repo in enumerate(repositories):
+        s:datetime = datetime.now(timezone.utc)
         logging.info(f'[{i+1}/{total}] [{repo.full_name}] converting to local store')
         local_repo, _  = localise_repo(repository=repo)
         localised.append(local_repo)
+
+        e:datetime = datetime.now(timezone.utc)
+        d = duration(start=s, end=e)
+        logging.info(f'[{i+1}/{total}] [{repo.full_name}] duration: {d}', loop_duration=d)
 
     end_time:datetime = datetime.now(timezone.utc)
     logging.info(f'[Standards Compliance] generating report documents')

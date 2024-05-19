@@ -9,7 +9,7 @@ from github.Repository import Repository
 from app.reports.writer import writer
 from app.data.remote.github.repository import repositories_for_org_and_team, repositories_from_slugs
 from app.data.remote.github.localise import localise_repo, localise_pull_requests, localise_workflow_runs, localise_teams
-from app.utils.dates.duration import duration
+from app.dates.duration import duration
 from app.reports.github_deployment_frequency.report import reports
 from app.log.logger import logging, lvl
 
@@ -63,7 +63,7 @@ def main() :
     end:date = datetime.now(timezone.utc).date()
     start:date = end - relativedelta(months=int(args.duration))
     start = start.replace(day=1)
-    pattern:str = ' live$'
+    pattern:str = ' live'
     branch:str = 'main'
 
     # now convert them!
@@ -74,6 +74,7 @@ def main() :
 
     total:int = len(repositories)
     for i, repo in enumerate(repositories):
+        s:datetime = datetime.now(timezone.utc)
         logging.info(f'[{i+1}/{total}] [{repo.full_name}] converting to local store')
         # get local details
         local, _ = localise_repo(repository=repo)
@@ -92,6 +93,9 @@ def main() :
 
         local_teams += teams
         local_deployments += deploys
+        e:datetime = datetime.now(timezone.utc)
+        d = duration(start=s, end=e)
+        logging.info(f'[{i+1}/{total}] [{repo.full_name}] duration: {d}', loop_duration=d)
 
     end_time:datetime = datetime.now(timezone.utc)
     dur:str = duration(start=start_time, end=end_time)
