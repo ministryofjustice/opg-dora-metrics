@@ -26,6 +26,7 @@ def to_local(g:Github,
           get_pull_requests:bool = False,
           get_workflow_runs:bool = True,
           workflow_run_pattern:str|None = ' live',
+          workflow_run_status:str= 'success',
           pull_request_fallback:bool = True) -> dict[str, Any]:
     """Use the remote data to generate a local version"""
 
@@ -56,6 +57,7 @@ def to_local(g:Github,
     if get_workflow_runs is True and workflow_run_pattern is not None:
         all_workflow_runs = workflow_runs(repository=repo,
                                           branch=branch,
+                                          status=workflow_run_status,
                                           start=start,
                                           end=end)
         # in range

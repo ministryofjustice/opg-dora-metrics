@@ -25,7 +25,7 @@ class FakeGithubDataPullRequestProvider(BaseProvider):
                                 upper_date:str|date='-1m',
                                 real_values:dict={}) -> dict:
         """Generate a pull_request"""
-        created:str = fake.date_between(start_date=lower_date, end_date=upper_date).isoformat()
+        created:str = fake.date_time_between(start_date=lower_date, end_date=upper_date).isoformat()
         attributes:dict = {
             'id': fake.random_number(),
             'title': fake.word(),

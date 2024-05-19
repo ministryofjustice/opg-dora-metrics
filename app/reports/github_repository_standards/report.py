@@ -6,7 +6,7 @@ from pprint import pp
 from jinja2 import Environment, FileSystemLoader, Template
 
 __output_directory__:str = './outputs/github_repository_standards/'
-__template_directory__:str = './app/reports/repository_standards_compliance/templates//'
+__template_directory__:str = './app/reports/github_repository_standards/templates/'
 
 
 def single_report(repository:dict) -> str:

@@ -1,6 +1,6 @@
 .DEFAULT_GOAL: all
-.PHONY: all requirements test test_with_tokens tests tests_with_tokens install github_repository_standards_by_list github_repository_standards_by_org
-.ONESHELL: all requirements test test_with_tokens tests tests_with_tokens install github_repository_standards_by_list github_repository_standards_by_org
+.PHONY: all requirements test test_with_tokens tests tests_with_tokens install github_repository_standards_by_list github_repository_standards_by_org github_deployment_frequency_by_org github_deployment_frequency_by_list
+.ONESHELL: all requirements test test_with_tokens tests tests_with_tokens install github_repository_standards_by_list github_repository_standards_by_org github_deployment_frequency_by_org github_deployment_frequency_by_list
 .EXPORT_ALL_VARIABLES:
 
 all: requirements install
@@ -31,6 +31,19 @@ test_with_tokens:
 ################################################
 # report commands
 ################################################
+# deployment frequency examples
+github_deployment_frequency_by_org:
+	@clear && env LOG_LEVEL=INFO env GITHUB_ACCESS_TOKEN="${GITHUB_TOKEN}" python ./github_deployment_frequency.py \
+		--org-team="ministryofjustice:opg" \
+		--duration=2
+
+github_deployment_frequency_by_list:
+	@clear && env LOG_LEVEL=INFO env GITHUB_ACCESS_TOKEN="${GITHUB_TOKEN}" python ./github_deployment_frequency.py \
+		--repository='ministryofjustice/opg-digideps' \
+		--repository='ministryofjustice/serve-opg' \
+		--duration=1
+
+# standards
 github_repository_standards_by_list:
 	@clear && env LOG_LEVEL=INFO env GITHUB_ACCESS_TOKEN="${GITHUB_TOKEN}" python ./github_repository_standards.py \
 		--exclude-archived \

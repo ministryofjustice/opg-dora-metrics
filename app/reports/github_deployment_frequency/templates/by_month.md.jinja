@@ -1,0 +1,31 @@
+---
+title: Releases per month
+last_reviewed_on: {{ now }}
+review_in: 3 months
+---
+# <%= current_page.data.title %>
+
+Releases per month for all OPG owned repositories.
+
+*Published on {{ now }} in {{ duration }}*
+
+<table class='dataframe'>
+    <thead>
+        <tr>
+            <th align='left'>Month</th>
+            <th align='right'>Total</th>
+            <th align='right'>Average per day</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for month, item in by_month.items() -%}
+        <tr>
+            <th align='left'>{{ month }}</th>
+            <td align='right'>{{ item.get('total', 0 )  }}</td>
+            <td align='right'>{{ item.get('average_per_day', 0.0) | round(2) }}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+*Created by [opg-dora-metrics](https://github.com/ministryofjustice/opg-dora-metrics)*

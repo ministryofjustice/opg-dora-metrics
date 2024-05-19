@@ -4,7 +4,7 @@ from pprint import pp
 
 from app.data.local.github_data.map import RepositoryBaselineComplianceAttributes
 from app.data.local.standards.repository_standards_compliance import repository_standards
-from app.reports.repository_standards_compliance.report import single_report, overview_report
+from app.reports.github_repository_standards.report import single_report, overview_report
 from faker import Faker
 from fake.github_data.repository import FakeGithubDataRepositoryProvider
 fake = Faker()

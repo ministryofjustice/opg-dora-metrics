@@ -1,18 +1,17 @@
-import argparse
-from datetime import datetime, timezone
 import os
-import json
+import argparse
 from argparse import RawTextHelpFormatter
-from typing import Any
+from datetime import datetime, timezone, date
+from dateutil.relativedelta import relativedelta
 from pprint import pp
 from github import Github
 from github.Repository import Repository
 from app.data.remote.github.repository import repositories_for_org_and_team, repositories_from_slugs
 from app.data.remote.github.to_local import to_local
-from app.data.local.standards.repository_standards_compliance import repository_standards
 from app.utils.dates.duration import duration
+from app.reports.github_deployment_frequency.report import report
 from app.log.logger import logging
-from app.reports.github_repository_standards.report import report
+
 
 def main() :
 
@@ -21,6 +20,14 @@ def main() :
                         help='Decide if we include archived repositories or not in the report',
                         default=True,
                         action=argparse.BooleanOptionalAction)
+    parser.add_argument('--duration',
+                        help='Number of months ago to use as start date, with end date being today',
+                        default=1)
+    parser.add_argument('--team-parent',
+                        help="Filter the team report to only include teams whose parent matches this slug (default: opg)",
+                        default="opg"
+                        )
+
     ## args for which repositories
     repoconfig = parser.add_argument_group("Repositories to report on")
     repoconfig_mx = repoconfig.add_mutually_exclusive_group(required=True)
@@ -31,7 +38,7 @@ def main() :
                                help="Specify multiple repositories (<repo-full-name>)")
 
     args = parser.parse_args()
-    logging.info(f'[Standards Compliance] starting')
+    logging.info(f'[Deployment Frequency] starting')
 
     github_token = os.environ.get("GITHUB_ACCESS_TOKEN", None )
     g:Github = Github(github_token)
@@ -50,28 +57,37 @@ def main() :
                                                repository_slugs=list(args.repository),
                                                exclude_archived=bool(args.exclude_archived))
 
+
+    end:date = datetime.now(timezone.utc).date()
+    start:date = end - relativedelta(months=int(args.duration))
+    start = start.replace(day=1)
+    pattern:str = ' live$'
+
     # now convert them!
     localised:list[dict] = []
     total:int = len(repositories)
     for i, repo in enumerate(repositories):
         logging.info(f'[{i+1}/{total}] [{repo.full_name}] converting to local store')
-        # turn off the extended data like prs / workflows
+        # get workflows and fallback to prs
         local:dict = to_local(g=g,
                               repository=repo,
-                              start=None,
-                              end=None,
-                              get_teams=False,
+                              start=start,
+                              end=end,
+                              get_teams=True,
                               get_artifacts=False,
                               get_pull_requests=False,
-                              get_workflow_runs=False,
-                              pull_request_fallback=False)
-        # now we have them localised, get there standards data
-        local['standards'] = repository_standards(local)
+                              get_workflow_runs=True,
+                              workflow_run_pattern=pattern,
+                              workflow_run_status='success',
+                              pull_request_fallback=True)
+
         localised.append(local)
 
+
     end_time:datetime = datetime.now(timezone.utc)
-    logging.info(f'[Standards Compliance] generating report documents')
     dur:str = duration(start=start_time, end=end_time)
+    logging.info(f'[Deployment Frequency] generating report documents')
+
     response:dict = {
         'meta': {
             'args': args.__dict__,
@@ -80,11 +96,16 @@ def main() :
                 'end': end_time.isoformat(),
                 'duration': dur,
             },
+            'report': {
+                'pattern': pattern,
+                'start': start.isoformat(),
+                'end': end.isoformat(),
+            },
         },
         'result': localised
     }
     report(response=response)
-    logging.info(f'[Standards Compliance] completd in [{dur}].')
+    # logging.info(f'[Deployment Frequency] completed in [{dur}].')
 
 
 if __name__ == "__main__":
