@@ -62,7 +62,7 @@ def main() :
 
         e:datetime = datetime.now(timezone.utc)
         d = duration(start=s, end=e)
-        logging.info(f'[{i+1}/{total}] [{repo.full_name}] duration: {d}', loop_duration=d)
+        logging.info(f'[{i+1}/{total}] [{repo.full_name}] duration: [{d}]', loop_duration=d)
 
     end_time:datetime = datetime.now(timezone.utc)
     logging.info(f'[Standards Compliance] generating report documents')

@@ -26,7 +26,7 @@ def deployments_per_month(deployments:list, months:list[str]) -> dict[str, tuple
 
     return per_month
 
-def deployments_per_repo_per_monthsitory(deployments:list,
+def deployments_per_repo_per_month(deployments:list,
                                          repositories:list,
                                          months:list[str]) -> dict[str, dict[str]]:
     """"""
@@ -42,9 +42,13 @@ def deployments_per_team_per_month(deployments:list,
     """"""
     per_team_per_month:dict = {}
     for t in teams:
-        repos:list = t['repository_ids'] if 'repository_ids' in t.keys() else []
-        deploys:list = [d for d in deployments if d['repository_id'] in repos ]
-        per_team_per_month[t['slug']] = deployments_per_month(deployments=deploys, months=months)
+        slug:str = t['slug']
+        deploys:list = []
+        # find deployments that are for the repo this team uses
+        for dep in deployments:
+            if slug in dep['teams']:
+                deploys.append(dep)
+        per_team_per_month[slug] = deployments_per_month(deployments=deploys, months=months)
     return per_team_per_month
 
 
@@ -79,8 +83,6 @@ def report_by_repo_by_month(by_month:dict[str], by_repo:dict[str], duration:str,
                                  )
     return output
 
-
-
 def report_by_month(by_month:dict[str], duration:str, months:list[str]) -> str:
     """"""
     loader:FileSystemLoader = FileSystemLoader(__template_directory__)
@@ -104,15 +106,17 @@ def reports(repositories:list[dict],
             args:dict,
             timings:dict) -> dict[str,str]:
     """"""
+
     duration:str = timings['duration']
     months:list = date_range_as_strings(start=start, end=end, inc=Increment.MONTH)
     per_month:dict = deployments_per_month(deployments=deployments, months=months)
-    per_repo_per_month:dict = deployments_per_repo_per_monthsitory(deployments=deployments,
+    per_repo_per_month:dict = deployments_per_repo_per_month(deployments=deployments,
                                                                    repositories=repositories,
                                                                    months=months)
     per_team_per_month:dict = deployments_per_team_per_month(deployments=deployments,
                                                              teams=teams,
                                                              months=months)
+    # pp(per_team_per_month)
 
     report_data:dict = {
         # raw data for json output
@@ -159,6 +163,5 @@ def reports(repositories:list[dict],
                                                                              by_month=per_month,
                                                                              months=[ym],
                                                                              duration=duration)
-
 
     return report_data

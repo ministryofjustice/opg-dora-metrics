@@ -95,7 +95,11 @@ def main() :
         local_deployments += deploys
         e:datetime = datetime.now(timezone.utc)
         d = duration(start=s, end=e)
-        logging.info(f'[{i+1}/{total}] [{repo.full_name}] duration: {d}', loop_duration=d)
+        logging.info(f'[{i+1}/{total}] [{repo.full_name}] duration: [{d}]', loop_duration=d)
+
+    # de-dup teams
+    uteam:dict = {t['id']: t for t in local_teams}
+    local_teams = uteam.values()
 
     end_time:datetime = datetime.now(timezone.utc)
     dur:str = duration(start=start_time, end=end_time)

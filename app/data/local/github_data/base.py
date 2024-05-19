@@ -7,7 +7,8 @@ from app.decorator import timer
 G = TypeVar('G', bound=GithubObject)
 
 __cache__:dict = {}
-WITH_CACHE:bool = True
+WITH_CACHE:bool = False
+# WITH_CACHE:bool = True
 
 @timer
 def DataMap(source:G, map:dict[str, Callable|None]) -> dict[str, Any]:

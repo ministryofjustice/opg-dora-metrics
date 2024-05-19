@@ -43,8 +43,8 @@ def merged_pull_requests(repository:Repository, branch:str, start:date, end:date
 
     all:list[PullRequest] = __pull_requests_in_range__(repository=repository,
                                               branch=branch,
-                                              start=lower,
-                                              end=upper,
+                                              lower=lower,
+                                              upper=upper,
                                               state='closed')
     matched:list[PullRequest] = []
     repo:str = repository.full_name

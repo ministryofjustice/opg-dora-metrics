@@ -30,7 +30,9 @@ WorkflowRunAttributes:dict[str, Callable|None] = {
     'conclusion': None,
     'head_branch': None,
     'created_at': lambda x: x.created_at.isoformat(),
+    'repository_full_name': lambda x: x.repository.full_name,
     'repository_id': lambda x: x.repository.id,
+    'teams': lambda x: [t.slug for t in x.repository.get_teams()],
     'date': lambda x: x.created_at.isoformat(),
 }
 TeamAttributes:dict[str, Callable|None] = {
@@ -38,7 +40,6 @@ TeamAttributes:dict[str, Callable|None] = {
     'name': None,
     'slug': None,
     'parent_id': lambda x:  x.parent.id,
-    'repository_ids': lambda x: [r.id for r in x.get_repos()]
 }
 PullRequestAttributes:dict[str, Callable|None] = {
     'id': None,
@@ -49,7 +50,9 @@ PullRequestAttributes:dict[str, Callable|None] = {
     'merged': None,
     'merged_at': lambda x: x.merged_at.isoformat(),
     'url': None,
+    'repository_full_name': lambda x: x.base.repo.full_name,
     'repository_id': lambda x: x.base.repo.id,
+    'teams': lambda x: [t.slug for t in x.base.repo.get_teams()],
     'date': lambda x: x.merged_at.isoformat(),
 }
 # split out some repo fields for ease in checking
