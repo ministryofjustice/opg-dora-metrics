@@ -1,17 +1,20 @@
-import argparse
-from datetime import datetime, timezone
-import os
-import json
-from argparse import RawTextHelpFormatter
 from typing import Any
 from pprint import pp
+import json
+import os
+import argparse
+from argparse import RawTextHelpFormatter
+from datetime import datetime, timezone
+from pathlib import Path
+
 from github import Github
 from github.Repository import Repository
 from app.data.remote.github.repository import repositories_for_org_and_team, repositories_from_slugs
 from app.data.remote.github.localise import localise_repo
 from app.utils.dates.duration import duration
 from app.log.logger import logging
-from app.reports.github_repository_standards.report import report
+from app.reports.github_repository_standards.report import reports
+from app.reports.writer import writer
 
 def main() :
 
@@ -54,25 +57,21 @@ def main() :
     total:int = len(repositories)
     for i, repo in enumerate(repositories):
         logging.info(f'[{i+1}/{total}] [{repo.full_name}] converting to local store')
-        local_repo:dict = localise_repo(repository=repo)
+        local_repo, _  = localise_repo(repository=repo)
         localised.append(local_repo)
 
-    pp(localised)
     end_time:datetime = datetime.now(timezone.utc)
     logging.info(f'[Standards Compliance] generating report documents')
+
     dur:str = duration(start=start_time, end=end_time)
-    response:dict = {
-        'meta': {
-            'args': args.__dict__,
-            'timing': {
-                'start': start_time.isoformat(),
-                'end': end_time.isoformat(),
-                'duration': dur,
-            },
-        },
-        'repositories': localised
-    }
-    report(response=response)
+    timings:dict = {'start': start_time.isoformat(),
+                    'end': end_time.isoformat(),
+                    'duration': dur}
+
+    report_data:dict = reports(repositories=localised, args=args.__dict__, timings=timings)
+    output_dir:str = './outputs/github_repository_standards/'
+
+    writer(report_data=report_data, output_dir=output_dir)
     logging.info(f'[Standards Compliance] completd in [{dur}].')
 
 

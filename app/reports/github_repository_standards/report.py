@@ -7,13 +7,12 @@ from jinja2 import Environment, FileSystemLoader, Template
 from app.data.local.standards.repository_standards_compliance import repository_standards
 
 
-__output_directory__:str = './outputs/github_repository_standards/'
 __template_directory__:str = './app/reports/github_repository_standards/templates/'
 
-
-def single_report(repository:dict) -> str:
+def report_detailed(repository:dict, standards:dict) -> str:
     """Generate a report string"""
 
+    repository['standards'] = standards
     loader:FileSystemLoader = FileSystemLoader(__template_directory__)
     env:Environment = Environment(loader=loader)
     template:Template = env.get_template('repository.md.jinja')
@@ -44,12 +43,7 @@ def single_report(repository:dict) -> str:
                                  information=information)
     return output
 
-def detailed_reports(repositories:list[dict]) -> dict[str, str]:
-    """Return a list of all individual reports for a series of repositories"""
-    reports:dict = {r['name']: single_report(r) for r in repositories}
-    return reports
-
-def overview_report(repositories:list[dict], duration:str) -> str:
+def report_index(repositories:list[dict], standards:dict, duration:str) -> str:
     """Generate a report listing current info for each repository"""
 
     loader:FileSystemLoader = FileSystemLoader(__template_directory__)
@@ -62,7 +56,7 @@ def overview_report(repositories:list[dict], duration:str) -> str:
     baseline_passed:int = 0
     extended_passed:int = 0
     for r in repositories:
-
+        r['standards'] = standards[r['full_name']]
         baseline_passed += 1 if r['standards']['status']['baseline'] is True else 0
         extended_passed += 1 if r['standards']['status']['extended'] is True else 0
     output:str = template.render(now=t,
@@ -74,39 +68,26 @@ def overview_report(repositories:list[dict], duration:str) -> str:
                                  )
     return output
 
-def generate_reports(repositories:list[dict], duration:str) -> None:
-    """Create the report files for each report"""
+def reports(repositories:list[dict], args:dict, timings:dict) -> dict[str,str]:
+    """Generate a series of report data in mix of json and rendered templates to return"""
 
-    detailed:dict[str] = detailed_reports(repositories=repositories)
-    overview:str = overview_report(repositories=repositories, duration=duration)
+    duration:str = timings['duration']
+    standards:dict = {r['name']:repository_standards(local_repository=r) for r in repositories}
+    report_data:dict = {
+        # raw data for json output
+        'raw.json': {
+            'meta': {
+                'args': args,
+                'timings': timings,
+            },
+            'repositories': repositories,
+            'repository_standards': standards,
+        },
+        'index.html.md.erb': report_index(repositories=repositories, standards=standards, duration=duration),
+    }
 
-    dir:str = __output_directory__
-    # write all the detailed reports
-    for key, report in detailed.items():
-        path:str = f'{dir}{key}'
-        os.makedirs(path, exist_ok=True)
-        with open(f'{path}/index.html.md.erb', 'w+') as f:
-            f.write(report)
-
-    # now the overview
-    path:str = f'{dir}/index.html.md.erb'
-    with open(path, 'w+') as f:
-        f.write(overview)
-
-
-def report(response:dict) -> None:
-    """"""
-    repositories:list = response['repositories']
-    duration:str = response['meta']['timing']['duration']
-
-    # add in standards data
     for r in repositories:
-        r['standards'] = repository_standards(local_repository=r)
+        name:str = r['full_name']
+        report_data[f'{name}/index.html.md.erb'] = report_detailed(r, standards[name])
 
-    dir:str = __output_directory__
-    os.makedirs(dir, exist_ok=True)
-    path:str = f'{dir}/raw.json'
-    with open(path, 'w+') as f:
-        json.dump(response, f, sort_keys=True, indent=2, default=str)
-
-    generate_reports(repositories=repositories, duration=duration)
+    return report_data
