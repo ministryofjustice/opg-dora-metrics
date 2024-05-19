@@ -9,7 +9,7 @@ from app.data.local.standards.repository_standards_compliance import repository_
 
 __template_directory__:str = './app/reports/github_repository_standards/templates/'
 
-def report_detailed(repository:dict, standards:dict) -> str:
+def report_detailed(repository:dict, standards:dict[str,Any]) -> str:
     """Generate a report string"""
 
     repository['standards'] = standards
@@ -43,7 +43,7 @@ def report_detailed(repository:dict, standards:dict) -> str:
                                  information=information)
     return output
 
-def report_index(repositories:list[dict], standards:dict, duration:str) -> str:
+def report_index(repositories:list[dict], standards:dict[str, dict[str,Any]], duration:str) -> str:
     """Generate a report listing current info for each repository"""
 
     loader:FileSystemLoader = FileSystemLoader(__template_directory__)
