@@ -57,9 +57,9 @@ def localise_pull_requests(repository:Repository,
     return localised, all
 
 @timer
-def localise_teams(repository:Repository) -> tuple[list[dict], list[Team]]:
+def localise_teams(repository:Repository, filter_by_parent_slug:str=None) -> tuple[list[dict], list[Team]]:
     """Localise teams"""
-    all:list[Team] = teams(repository=repository)
+    all:list[Team] = teams(repository=repository, filter_by_parent_slug=filter_by_parent_slug)
     localised:list[dict] = [Local(team) for team in all]
     return localised, all
 

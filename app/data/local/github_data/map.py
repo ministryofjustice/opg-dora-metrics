@@ -19,19 +19,19 @@ ArtifactAttributes:dict[str, Callable|None] = {
     'id': None,
     'name': None,
     'archive_download_url': None,
-    'created_at': None,
+    'created_at': lambda x: x.created_at.isoformat(),
     'workflow_run_id': lambda x: x.workflow_run.id,
     'repository_id': lambda x: x.workflow_run.repository.id,
-    'date': lambda x: x.created_at,
+    'date': lambda x: x.created_at.isoformat(),
 }
 WorkflowRunAttributes:dict[str, Callable|None] = {
     'id': None,
     'name': None,
     'conclusion': None,
     'head_branch': None,
-    'created_at': None,
+    'created_at': lambda x: x.created_at.isoformat(),
     'repository_id': lambda x: x.repository.id,
-    'date': lambda x: x.created_at,
+    'date': lambda x: x.created_at.isoformat(),
 }
 TeamAttributes:dict[str, Callable|None] = {
     'id': None,
@@ -47,10 +47,10 @@ PullRequestAttributes:dict[str, Callable|None] = {
     'base': lambda x: x.base.ref,
     'number': None,
     'merged': None,
-    'merged_at': None,
+    'merged_at': lambda x: x.merged_at.isoformat(),
     'url': None,
     'repository_id': lambda x: x.base.repo.id,
-    'date': lambda x: x.merged_at
+    'date': lambda x: x.merged_at.isoformat(),
 }
 # split out some repo fields for ease in checking
 RepositoryBaselineComplianceAttributes:dict[str, Callable|None] = {

@@ -38,7 +38,7 @@ github_deployment_frequency_by_org:
 		--duration=2
 
 github_deployment_frequency_by_list:
-	@clear && env LOG_LEVEL=INFO env GITHUB_ACCESS_TOKEN="${GITHUB_TOKEN}" python ./github_deployment_frequency.py \
+	@clear && env LOG_LEVEL=DEBUG env GITHUB_ACCESS_TOKEN="${GITHUB_TOKEN}" python ./github_deployment_frequency.py \
 		--repository='ministryofjustice/opg-digideps' \
 		--repository='ministryofjustice/serve-opg' \
 		--duration=1

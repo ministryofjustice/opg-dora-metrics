@@ -11,7 +11,7 @@ from app.data.remote.github.repository import repositories_for_org_and_team, rep
 from app.data.remote.github.localise import localise_repo, localise_pull_requests, localise_workflow_runs, localise_teams
 from app.utils.dates.duration import duration
 from app.reports.github_deployment_frequency.report import reports
-from app.log.logger import logging
+from app.log.logger import logging, lvl
 
 
 def main() :
@@ -39,7 +39,7 @@ def main() :
                                help="Specify multiple repositories (<repo-full-name>)")
 
     args = parser.parse_args()
-    logging.info(f'[Deployment Frequency] starting')
+    logging.info(f'[Deployment Frequency] starting', current_level=lvl)
 
     github_token = os.environ.get("GITHUB_ACCESS_TOKEN", None )
     g:Github = Github(github_token)
@@ -77,7 +77,7 @@ def main() :
         logging.info(f'[{i+1}/{total}] [{repo.full_name}] converting to local store')
         # get local details
         local, _ = localise_repo(repository=repo)
-        teams, _ = localise_teams(repository=repo)
+        teams, _ = localise_teams(repository=repo, filter_by_parent_slug=args.team_parent)
         localised.append(local)
         # get the workflow / pr data
         deploys, _ = localise_workflow_runs(repository=repo,
