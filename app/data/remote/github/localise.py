@@ -12,7 +12,7 @@ from app.data.remote.github.artifact import artifacts
 from app.data.remote.github.team import teams
 from app.data.remote.github.repository import get_repository_by_slug
 from app.data.remote.github.workflow_run import workflow_runs, matching_workflow_runs, workflow_runs_in_range
-from app.data.remote.github.pull_request import merged_pull_requests
+from app.data.remote.github.pull_request import merged_pull_requests, pull_requests_in_range
 from app.data.local.github_data.map import Local
 from app.log.logger import logging
 from app.decorator import timer
@@ -52,9 +52,11 @@ def localise_pull_requests(repository:Repository,
                            end:date,
                            branch:str='main') -> tuple[list[dict], list[PullRequest]]:
     """Localisation of pull requests"""
-    all:list[PullRequest] = merged_pull_requests(repository=repository, branch=branch, start=start, end=end)
-    localised:list[dict] = [Local(pr) for pr in all]
-    return localised, all
+    in_range:list[PullRequest] = pull_requests_in_range(repository=repository, branch=branch, start=start, end=end)
+    # all:list[PullRequest] = merged_pull_requests(pull_requests=in_range)
+
+    localised:list[dict] = [Local(pr) for pr in in_range]
+    return localised, in_range
 
 @timer
 def localise_teams(repository:Repository, filter_by_parent_slug:str=None) -> tuple[list[dict], list[Team]]:

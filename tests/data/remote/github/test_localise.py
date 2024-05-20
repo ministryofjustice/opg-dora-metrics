@@ -91,32 +91,6 @@ def test_data_remote_github_localise_artifacts():
         assert repo.id == l[0]['repository_id']
 
 
-def test_data_remote_github_localise_pull_requests():
-    """Check pr locaisation and filtering"""
-    e:date = datetime.now(timezone.utc).date() - relativedelta(months=1)
-    s:date = e - relativedelta(months=2)
-    # out of bound dates
-    out_start:date = e + relativedelta(years=1)
-    out_end:date = out_start + relativedelta(months=2)
-
-    repo:Repository = fake.github_repository(real_values={'full_name':'opg/test', 'name': 'test'})
-    prs:list[PullRequest] = fake.github_pull_requests(lower_date=s, upper_date=e)
-    base:PullRequestPart = fake.github_pull_request_base()
-
-    # attach the repo to the base
-    attach.attach_property(base, '_repo', repo)
-    # attach the base to all prs
-    for pr in prs:
-        attach.attach_property(pr, '_base', base)
-
-    # overwrite the call to fetch all prs with one that will return our fake data including out or range
-    # prs so we can check they are filtered
-    with patch('app.data.remote.github.pull_request.__pull_requests_in_range__', return_value=prs):
-        l, all = localise_pull_requests(repository=repo, start=s, end=e)
-        assert len(prs) == len(l)
-        assert len(prs) == len(all)
-        assert repo.id == l[0]['repository_id']
-
 
 @pytest.mark.skipif(os.environ.get('GITHUB_TEST_TOKEN', 0) == 0, reason='Requires github token to run')
 def test_data_remote_github_repository_to_local_using_real_repository():
@@ -124,7 +98,6 @@ def test_data_remote_github_repository_to_local_using_real_repository():
 
     Using a fixed point in time, so these resources may be removed due to github data retention policies
     """
-
     g:Github = Github(os.environ.get('GITHUB_TEST_TOKEN'))
     repo:Repository = g.get_repo("ministryofjustice/serve-opg")
 

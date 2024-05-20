@@ -35,12 +35,12 @@ test_with_tokens:
 github_deployment_frequency_by_org:
 	@clear && env LOG_LEVEL=INFO env GITHUB_ACCESS_TOKEN="${GITHUB_TOKEN}" python ./github_deployment_frequency.py \
 		--org-team="ministryofjustice:opg" \
-		--duration=2
+		--duration=6
 
 github_deployment_frequency_by_list:
-	@clear && env LOG_LEVEL=DEBUG env GITHUB_ACCESS_TOKEN="${GITHUB_TOKEN}" python ./github_deployment_frequency.py \
+	@clear && env LOG_LEVEL=INFO env GITHUB_ACCESS_TOKEN="${GITHUB_TOKEN}" python ./github_deployment_frequency.py \
 		--repository='ministryofjustice/opg-digideps' \
-		--repository='ministryofjustice/serve-opg' \
+		--repository='ministryofjustice/opg-data-lpa-store' \
 		--duration=1
 
 # standards

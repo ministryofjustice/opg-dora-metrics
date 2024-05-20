@@ -7,7 +7,6 @@ from pprint import pp
 from app.log.logger import logging
 from app.decorator import timer
 
-@timer
 def duration(start:datetime, end:datetime) -> str:
     """Return the human readable version of the duration between `start` and `end`"""
     logging.debug("Duration get", start=start, end=end)
@@ -30,7 +29,6 @@ def duration(start:datetime, end:datetime) -> str:
 
 
 
-@timer
 def weekdays_in_month(period:date) -> int:
     """Find the number of weekdays (as a proxy measure for working days) for the month provided"""
     count:int = 0

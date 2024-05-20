@@ -9,11 +9,13 @@ from app.log.logger import logging
 from app.decorator import timer
 
 @timer
-def __pull_requests_in_range__(repository:Repository,
-                               lower:datetime, upper:datetime,
-                               branch:str, state:str='closed') -> list[PullRequest]:
+def pull_requests_in_range(repository:Repository,
+                           start:date, end:date,
+                           branch:str, state:str='closed') -> list[PullRequest]:
     """Return all the prs"""
     logging.debug(f'[{repository.full_name}] (pull_requests) getting all', repo=repository.full_name, branch=branch)
+    lower:datetime = to_datetime(start)
+    upper:datetime = to_datetime(end)
     remote_prs = repository.get_pulls(base=branch, state=state, sort='merged_at', direction='desc')
     total:int = remote_prs.totalCount
 
@@ -33,33 +35,23 @@ def __pull_requests_in_range__(repository:Repository,
 
 
 @timer
-def merged_pull_requests(repository:Repository, branch:str, start:date, end:date) -> list[PullRequest]:
+def merged_pull_requests(pull_requests:list[PullRequest]) -> list[PullRequest]:
     """Return a list of prs for the repo in the date range set"""
-    logging.debug('getting pull_requests in date range', repo=repository.full_name, start=start, end=end, branch=branch)
+    logging.debug('getting merged pull requests')
 
-    lower:datetime = to_datetime(start)
-    upper:datetime = to_datetime(end)
-
-
-    all:list[PullRequest] = __pull_requests_in_range__(repository=repository,
-                                              branch=branch,
-                                              lower=lower,
-                                              upper=upper,
-                                              state='closed')
     matched:list[PullRequest] = []
-    repo:str = repository.full_name
-    total:int = len(all)
+    total:int = len(pull_requests)
+    i:int = 1
 
-    for i, pr in enumerate(all):
-        merged:bool = pr.merged is True
-        in_range = between(test=pr.merged_at, lower=lower, upper=upper)
+    for i, pr in enumerate(pull_requests):
+        merged:bool = pr.merged
 
         merge_flag:str = "✅" if merged else "❌"
-        range_flag:str = "✅" if in_range else "❌"
-        logging.debug(f'[{repo}] (pull_requests) [{i+1}/{total}] pr is merged {merge_flag} and in range {range_flag}', repo=repository.full_name, date=pr.merged_at, branch=branch, start=start, end=end)
+        logging.debug(f'(pull_requests) [{i+1}/{total}] pr is merged {merge_flag}', date=pr.merged_at)
         # attach to matched when its in range
-        if merged and in_range:
+        if merged:
             matched.append(pr)
+        # i += 1
 
-    logging.info(f'[{repo}] (pull_requests) found [{len(matched)}] merged prs within date range', start=start, end=end)
+    logging.info(f'(pull_requests) found [{len(matched)}] merged prs that have been merged')
     return matched

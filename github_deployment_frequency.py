@@ -1,4 +1,6 @@
 import os
+import time
+import json
 import argparse
 from argparse import RawTextHelpFormatter
 from datetime import datetime, timezone, date
@@ -12,7 +14,9 @@ from app.data.remote.github.localise import localise_repo, localise_pull_request
 from app.dates.duration import duration
 from app.reports.github_deployment_frequency.report import reports
 from app.log.logger import logging, lvl
+from app.decorator import TRACK_DURATIONS
 
+TRACK_DURATIONS['enabled'] = True
 
 def main() :
 
@@ -72,9 +76,12 @@ def main() :
     local_deployments:list = []
     local_teams:list = []
 
+    vs:float = time.perf_counter()
+
     total:int = len(repositories)
     for i, repo in enumerate(repositories):
-        s:datetime = datetime.now(timezone.utc)
+        s:float = time.perf_counter()
+
         logging.info(f'[{i+1}/{total}] [{repo.full_name}] converting to local store')
         # get local details
         local, _ = localise_repo(repository=repo)
@@ -93,9 +100,14 @@ def main() :
 
         local_teams += teams
         local_deployments += deploys
-        e:datetime = datetime.now(timezone.utc)
-        d = duration(start=s, end=e)
-        logging.info(f'[{i+1}/{total}] [{repo.full_name}] duration: [{d}]', loop_duration=d)
+        e:float = time.perf_counter()
+        loop_dur = e - s
+        logging.info(f'[{i+1}/{total}] [{repo.full_name}] duration: [{loop_dur}]', loop_duration=loop_dur, total_dur=(e-vs))
+        # flag any slow calls
+        if loop_dur > 60:
+            logging.error(f'[{repo.full_name}] over 60 seconds!')
+        elif loop_dur > 30:
+            logging.warn(f'[{repo.full_name}] over 30 seconds!')
 
     # de-dup teams
     uteam:dict = {t['id']: t for t in local_teams}
@@ -118,9 +130,14 @@ def main() :
                                teams=local_teams)
 
     output_dir:str = './outputs/github_deployment_frequency/'
-
     writer(report_data=report_data, output_dir=output_dir)
+
     logging.info(f'[Deployment Frequency] completed in [{dur}].')
+
+    if TRACK_DURATIONS['enabled']:
+        tracked = sorted(TRACK_DURATIONS['data'], key=lambda i: i['duration'], reverse=True)
+        with open('times.json', 'w+') as f:
+            json.dump(tracked, f, sort_keys=True, indent=2, default=str)
 
 
 if __name__ == "__main__":
