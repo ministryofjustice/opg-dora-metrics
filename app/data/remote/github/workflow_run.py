@@ -6,7 +6,7 @@ from github.WorkflowRun import WorkflowRun
 from app.dates.ranges import Increment, date_range_as_strings
 from app.dates.between import between
 from app.dates.convert import to_datetime
-from app.log.logger import logging
+from app.logger import logging
 from app.decorator import timer
 
 @timer

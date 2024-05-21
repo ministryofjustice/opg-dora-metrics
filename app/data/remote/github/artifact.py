@@ -1,6 +1,6 @@
 from github.Artifact import Artifact
 from github.WorkflowRun import WorkflowRun
-from app.log.logger import logging
+from app.logger import logging
 from app.decorator import timer
 
 

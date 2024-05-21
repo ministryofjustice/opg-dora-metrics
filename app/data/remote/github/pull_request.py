@@ -5,7 +5,7 @@ from github.Repository import Repository
 from github.PullRequest import PullRequest
 from app.dates.convert import to_datetime
 from app.dates.between import between
-from app.log.logger import logging
+from app.logger import logging
 from app.decorator import timer
 
 @timer

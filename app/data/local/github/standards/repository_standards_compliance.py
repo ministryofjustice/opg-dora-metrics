@@ -1,5 +1,5 @@
 
-from app.log.logger import logging
+from app.logger import logging
 from app.decorator import timer
 from app.data.local.github.map import RepositoryDetailedAttributes, RepositoryBaselineComplianceAttributes, RepositoryExtendedComplianceAttributes
 

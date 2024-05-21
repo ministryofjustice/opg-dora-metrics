@@ -4,7 +4,7 @@ import calendar
 from dateutil.relativedelta import relativedelta
 from pprint import pp
 
-from app.log.logger import logging
+from app.logger import logging
 from app.decorator import timer
 
 def duration(start:datetime, end:datetime) -> str:

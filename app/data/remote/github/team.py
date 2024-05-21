@@ -1,7 +1,7 @@
 from github.Repository import Repository
 from github.Team import Team
 from app.decorator import timer
-from app.log.logger import logging
+from app.logger import logging
 
 @timer
 def teams(repository:Repository, filter_by_parent_slug:str=None) -> list[Team]:

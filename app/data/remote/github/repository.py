@@ -2,7 +2,7 @@ from github import Github
 from github.Repository import Repository
 from github.Organization import Organization
 from github.Team import Team
-from app.log.logger import logging
+from app.logger import logging
 from app.decorator import timer
 
 

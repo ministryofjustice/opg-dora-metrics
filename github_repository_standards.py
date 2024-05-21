@@ -11,7 +11,7 @@ from github.Repository import Repository
 from app.data.remote.github.repository import repositories_for_org_and_team, repositories_from_slugs
 from app.data.remote.github.localise import localise_repo
 from app.dates.duration import duration
-from app.log.logger import logging
+from app.logger import logging
 from app.reports.github_repository_standards.report import reports
 from app.reports.writer import writer
 

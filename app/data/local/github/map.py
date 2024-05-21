@@ -7,7 +7,7 @@ from github.Repository import Repository
 from github.PullRequest import PullRequest
 from github.Team import Team
 from app.data.local.github.base import DataMap
-from app.log.logger import logging
+from app.logger import logging
 from app.decorator import timer
 G = TypeVar('G', bound=GithubObject)
 

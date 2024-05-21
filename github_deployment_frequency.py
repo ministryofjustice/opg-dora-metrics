@@ -13,7 +13,7 @@ from app.data.remote.github.repository import repositories_for_org_and_team, rep
 from app.data.remote.github.localise import localise_repo, localise_pull_requests, localise_workflow_runs, localise_teams
 from app.dates.duration import duration
 from app.reports.github_deployment_frequency.report import reports
-from app.log.logger import logging, lvl
+from app.logger import logging, lvl
 from app.decorator import TRACK_DURATIONS
 
 TRACK_DURATIONS['enabled'] = True

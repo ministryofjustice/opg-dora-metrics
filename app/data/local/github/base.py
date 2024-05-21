@@ -1,7 +1,7 @@
 from typing import Any, TypeVar, Callable
 from types import FunctionType
 from github.GithubObject import GithubObject, _ValuedAttribute, Attribute
-from app.log.logger import logging
+from app.logger import logging
 from app.decorator import timer
 
 G = TypeVar('G', bound=GithubObject)

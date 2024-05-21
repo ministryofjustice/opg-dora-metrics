@@ -1,7 +1,7 @@
 from functools import wraps
 import time
 import json
-from app.log.logger import logging
+from app.logger import logging
 
 
 TRACK_DURATIONS:dict = {
