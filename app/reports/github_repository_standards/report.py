@@ -53,10 +53,12 @@ def report_index(repositories:list[dict], standards:dict[str, dict[str,Any]], du
     t:str = datetime.now(timezone.utc).strftime('%Y-%m-%d')
     total:int = len(repositories)
 
+
     baseline_passed:int = 0
     extended_passed:int = 0
     for r in repositories:
-        r['standards'] = standards[r['full_name']]
+        name:str = r['name']
+        r['standards'] = standards[name]
         baseline_passed += 1 if r['standards']['status']['baseline'] is True else 0
         extended_passed += 1 if r['standards']['status']['extended'] is True else 0
     output:str = template.render(now=t,
@@ -87,7 +89,7 @@ def reports(repositories:list[dict], args:dict, timings:dict) -> dict[str,str]:
     }
 
     for r in repositories:
-        name:str = r['full_name']
+        name:str = r['name']
         report_data[f'{name}/index.html.md.erb'] = report_detailed(r, standards[name])
 
     return report_data
