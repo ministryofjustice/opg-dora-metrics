@@ -4,7 +4,7 @@ from pprint import pp
 
 from github import Github
 from github.Repository import Repository
-from app.data.local.github.map import Local
+from app.data.github.local.map import Local
 
 from faker import Faker
 from fake.github.repository import FakeGithubRepositoryProvider

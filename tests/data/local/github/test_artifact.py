@@ -3,7 +3,7 @@ import pytest
 from pprint import pp
 
 from github.Artifact import Artifact
-from app.data.local.github.map import Local
+from app.data.github.local.map import Local
 
 from faker import Faker
 from fake.github.artifact import FakeGithubArtifactProvider

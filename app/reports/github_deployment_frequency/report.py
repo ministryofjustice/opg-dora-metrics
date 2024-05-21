@@ -6,7 +6,7 @@ from pprint import pp
 from jinja2 import Environment, FileSystemLoader, Template
 from app.dates.ranges import date_range_as_strings, Increment
 from app.dates.duration import weekdays_in_month
-from app.data.remote.github.localise import localise_pull_requests, localise_workflow_runs
+from app.data.github.remote.localise import localise_pull_requests, localise_workflow_runs
 
 __template_directory__:str = './app/reports/github_deployment_frequency/templates/'
 

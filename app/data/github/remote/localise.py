@@ -8,11 +8,11 @@ from github.Artifact import Artifact
 from github.WorkflowRun import WorkflowRun
 from github.PullRequest import PullRequest
 
-from app.data.remote.github.artifact import artifacts
-from app.data.remote.github.team import teams
-from app.data.remote.github.workflow_run import workflow_runs, matching_workflow_runs, workflow_runs_in_range
-from app.data.remote.github.pull_request import pull_requests_in_range
-from app.data.local.github.map import Local
+from app.data.github.remote.artifact import artifacts
+from app.data.github.remote.team import teams
+from app.data.github.remote.workflow_run import workflow_runs, matching_workflow_runs, workflow_runs_in_range
+from app.data.github.remote.pull_request import pull_requests_in_range
+from app.data.github.local.map import Local
 from app.logger import logging
 from app.decorator import timer
 

@@ -9,8 +9,8 @@ from pprint import pp
 from github import Github
 from github.Repository import Repository
 from app.reports.writer import writer
-from app.data.remote.github.repository import repositories_for_org_and_team, repositories_from_slugs
-from app.data.remote.github.localise import localise_repo, localise_pull_requests, localise_workflow_runs, localise_teams
+from app.data.github.remote.repository import repositories_for_org_and_team, repositories_from_slugs
+from app.data.github.remote.localise import localise_repo, localise_pull_requests, localise_workflow_runs, localise_teams
 from app.dates.duration import duration
 from app.reports.github_deployment_frequency.report import reports
 from app.logger import logging, lvl

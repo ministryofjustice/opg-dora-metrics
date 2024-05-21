@@ -2,8 +2,8 @@ import os
 import pytest
 from pprint import pp
 
-from app.data.local.github.map import RepositoryBaselineComplianceAttributes
-from app.data.local.github.standards.repository_standards_compliance import repository_standards
+from app.data.github.local.map import RepositoryBaselineComplianceAttributes
+from app.data.github.local.standards.repository_standards_compliance import repository_standards
 
 from faker import Faker
 from fake.github_data.repository import FakeGithubDataRepositoryProvider

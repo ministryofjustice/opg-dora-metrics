@@ -12,7 +12,7 @@ from github.WorkflowRun import WorkflowRun
 from github.PullRequest import PullRequest
 from github.PullRequestPart import PullRequestPart
 from app.dates.convert import to_date
-from app.data.remote.github.localise import localise_artifacts,localise_pull_requests,localise_teams,localise_workflow_runs, localise_repo
+from app.data.github.remote.localise import localise_artifacts,localise_pull_requests,localise_teams,localise_workflow_runs, localise_repo
 
 from faker import Faker
 from fake.github import repository, workflow_run, team, pull_request, artifact, attach
@@ -34,7 +34,7 @@ def test_data_remote_github_localise_teams():
         attach.attach_property(t, '_parent', parent)
 
     repo:Repository = fake.github_repository()
-    with patch('app.data.remote.github.localise.teams', return_value=teams):
+    with patch('app.data.github.remote.localise.teams', return_value=teams):
         localised, all_teams = localise_teams(repo)
         # make sure length matches
         assert len(teams) == len(localised)
@@ -60,7 +60,7 @@ def test_data_remote_github_localise_workflow_runs():
     for w in runs:
         attach.attach_property(w, '_repository', repo)
 
-    with patch('app.data.remote.github.localise.workflow_runs', return_value=runs):
+    with patch('app.data.github.remote.localise.workflow_runs', return_value=runs):
         l, all = localise_workflow_runs(repository=repo, start=s, end=e, status='success')
         # check lengths
         assert len(runs_in) == len(all)
@@ -83,7 +83,7 @@ def test_data_remote_github_localise_artifacts():
     for a in artifacts:
         attach.attach_property(a, '_workflow_run', run)
 
-    with patch('app.data.remote.github.localise.artifacts', return_value=artifacts):
+    with patch('app.data.github.remote.localise.artifacts', return_value=artifacts):
         l, all = localise_artifacts([run])
         assert len(artifacts) == len(l)
         assert len(artifacts) == len(all)
