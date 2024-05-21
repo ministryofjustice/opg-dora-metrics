@@ -7,11 +7,15 @@ from typing import Any
 from pprint import pp
 from github import Github
 from github.Repository import Repository
+from app.reports.writer import writer
 from app.reports.service_uptime.report import reports
-from app.data.github.remote.localise import localise_repo, localise_workflow_runs, localise_artifacts
+from app.data.github.remote.localise import localise_workflow_runs, localise_artifacts
 from app.data.github.remote.repository import repositories_from_slugs
+from app.dates.duration import duration
 
 def main():
+    start_time:datetime = datetime.now(timezone.utc)
+
     parser = argparse.ArgumentParser()
     parser.add_argument('--source-repository',
                         help='Name of repository that runs the daily reports that we want to fetch and merge.',
@@ -50,8 +54,23 @@ def main():
     # get the artifacts for each workflow run
     artifacts, _ = localise_artifacts(workflow_runs=workflow_runs)
     ##
-    report_data:dict = reports(artifacts=artifacts, token=github_token)
+    end_time:datetime = datetime.now(timezone.utc)
+    dur:str = duration(start=start_time, end=end_time)
+    timings:dict = {'start': start_time.isoformat(),
+                    'end': end_time.isoformat(),
+                    'duration': dur}
 
+
+
+    report_data:dict = reports(artifacts=artifacts,
+                               token=github_token,
+                               start=start,
+                               end=end,
+                               args=args.__dict__,
+                               timings=timings,
+                               )
+    output_dir:str = './outputs/service_uptime/'
+    writer(report_data=report_data, output_dir=output_dir)
 
 if __name__ == "__main__":
     main()
