@@ -2,7 +2,7 @@ import os
 import pytest
 from pprint import pp
 
-from app.data.local.github_data.map import RepositoryBaselineComplianceAttributes
+from app.data.local.github.map import RepositoryBaselineComplianceAttributes
 from app.data.local.standards.repository_standards_compliance import repository_standards
 
 from faker import Faker

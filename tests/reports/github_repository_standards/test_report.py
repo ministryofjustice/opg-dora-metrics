@@ -2,7 +2,7 @@ import os
 import pytest
 from pprint import pp
 
-from app.data.local.github_data.map import RepositoryBaselineComplianceAttributes
+from app.data.local.github.map import RepositoryBaselineComplianceAttributes
 from app.data.local.standards.repository_standards_compliance import repository_standards
 from app.reports.github_repository_standards.report import report_detailed, report_index
 from faker import Faker
@@ -33,7 +33,7 @@ def test_reports_repository_standards_compliance_report_overview():
         source[k] = True
 
     report:str = report_index(repositories=[source],
-                              standards={source['full_name']: repository_standards(source)},
+                              standards={source['name']: repository_standards(source)},
                               duration='1 year 10 months')
 
     checkpassed:str = "- **Passed baseline checks**: 1 / 1"

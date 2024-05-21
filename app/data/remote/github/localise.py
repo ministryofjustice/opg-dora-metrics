@@ -12,7 +12,7 @@ from app.data.remote.github.artifact import artifacts
 from app.data.remote.github.team import teams
 from app.data.remote.github.workflow_run import workflow_runs, matching_workflow_runs, workflow_runs_in_range
 from app.data.remote.github.pull_request import pull_requests_in_range
-from app.data.local.github_data.map import Local
+from app.data.local.github.map import Local
 from app.log.logger import logging
 from app.decorator import timer
 
