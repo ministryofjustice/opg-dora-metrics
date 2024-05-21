@@ -4,7 +4,7 @@ from datetime import date, datetime, timezone
 from typing import Any
 from pprint import pp
 from jinja2 import Environment, FileSystemLoader, Template
-from app.data.local.standards.repository_standards_compliance import repository_standards
+from app.data.local.github.standards.repository_standards_compliance import repository_standards
 
 
 __template_directory__:str = './app/reports/github_repository_standards/templates/'
