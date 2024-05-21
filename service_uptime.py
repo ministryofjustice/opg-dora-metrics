@@ -31,6 +31,7 @@ def main():
 
     end:date = datetime.now(timezone.utc).date()
     start:date = end - relativedelta(months=int(args.duration))
+    start = start.replace(day=1)
 
     github_token = os.environ.get("GITHUB_ACCESS_TOKEN", None )
     g:Github = Github(github_token)

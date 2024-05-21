@@ -1,5 +1,5 @@
 ---
-title: Uptime per service, per month {{ report_time or '' }}
+title: Uptime per service, per day {{ report_time or '' }}
 last_reviewed_on: {{ now }}
 review_in: {{ review_in or '3 months' }}
 ---
@@ -8,29 +8,27 @@ review_in: {{ review_in or '3 months' }}
 
 *Published on {{ now }} in {{ duration }}*
 
-{% set by_day_prefix = '/documentation/reports/service-uptime/by_day/' -%}
-{% set by_month_prefix = '/documentation/reports/service-uptime/by_month/' -%}
-
 <table class='dataframe'>
     <thead>
         <tr>
-            <th style='text-align:left;'>Service</th>
-            {% for month in months -%}
-            <th style='text-align:right;'><a href='{{ by_day_prefix }}{{ month }}/index.html'>{{ month }}</a></th>
+            <th style='text-align:left;'></th>
+            {% for service, items in by_day.items() -%}
+            <th style='text-align:right;'>{{ service }}</th>
             {% endfor -%}
         </tr>
     </thead>
     <tbody>
-    {% for service, items in by_month.items() -%}
+    {% for day in days -%}
         <tr>
-            <th style='text-align:left;'>{{ service }}</th>
-            {% for m in months -%}
-                {% set total, count = items.get(m) -%}
+            <th style='text-align:left;'>{{ day }}</th>
+            {% for service, items in by_day.items() -%}
+                {% set total, count = items.get(day, (0,0)) -%}
                 {% set value = None -%}
                 {% if count > 0 -%}
                     {% set value = total / count -%}
                 {% endif -%}
-            <td style='text-align:right;' title="Uptime % for {{ m }}: ({{ value }})">
+
+            <td style='text-align:right;' title="Uptime % for {{ day }}: ({{ value }})">
                 {% if value is not none -%}
                     {{ value | round(4) }} %
                 {% else -%}
@@ -46,12 +44,3 @@ review_in: {{ review_in or '3 months' }}
 *Created by [opg-dora-metrics](https://github.com/ministryofjustice/opg-dora-metrics)*
 
 *Note: The uptime data is an amalgamation of daily AWS health check percentage checks*
-
-{% if previous -%}
-### Monthly reports
-
-{% for m in previous -%}
-- [{{ m }}]({{ by_month_prefix}}{{m}}/index)
-{% endfor -%}
-
-{% endif -%}
