@@ -31,6 +31,14 @@ test_with_tokens:
 ################################################
 # report commands
 ################################################
+# daily uptime
+# account="649098267436" role="breakglass"
+daily_uptime:
+	@aws-vault exec identity -- env LOG_LEVEL=INFO python ./service_uptime_daily.py \
+		--service=sirius \
+		--role="arn:aws:iam::$(account):role/$(role)"
+
+
 # deployment frequency examples
 github_deployment_frequency_by_org:
 	@clear && env LOG_LEVEL=INFO env GITHUB_ACCESS_TOKEN="${GITHUB_TOKEN}" python ./github_deployment_frequency.py \
