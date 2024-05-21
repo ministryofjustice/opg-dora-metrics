@@ -52,7 +52,10 @@ def __services__(data:list[dict]) -> list[str]:
     for item in data:
         service:str = item.get('Service')
         services[service] = True
-    return [s for s in services.keys()]
+    all:list = [s for s in services.keys()]
+    all.sort()
+    return all
+
 
 def __group_by_service__(services:list[str], data:list[dict]) -> dict[str, list[dict]]:
     """Group the data into a dict with the service name being the key"""
@@ -137,6 +140,7 @@ def report_by_day(by_service_by_day:dict[str],
     return output
 
 
+
 def reports(artifacts:list[dict],
             token:str,
             start:date,
@@ -164,7 +168,6 @@ def reports(artifacts:list[dict],
     by_service_per_day:dict = per_service_per_day(services=services,
                                                   data=uptimes,
                                                   days=all_days)
-
 
     data:dict = {
         'raw.json': {
@@ -203,6 +206,5 @@ def reports(artifacts:list[dict],
                                                                days=days,
                                                                duration=duration,
                                                                month=ym)
-
 
     return data

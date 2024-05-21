@@ -3,8 +3,6 @@ import os
 import json
 from datetime import date, datetime, timezone
 from dateutil.relativedelta import relativedelta
-from typing import Any
-from pprint import pp
 from github import Github
 from github.Repository import Repository
 from app.reports.writer import writer
@@ -12,6 +10,7 @@ from app.reports.service_uptime.report import reports
 from app.data.github.remote.localise import localise_workflow_runs, localise_artifacts
 from app.data.github.remote.repository import repositories_from_slugs
 from app.dates.duration import duration
+from app.logger import logging, lvl
 
 def main():
     start_time:datetime = datetime.now(timezone.utc)
@@ -30,6 +29,7 @@ def main():
     args = parser.parse_args()
 
     end:date = datetime.now(timezone.utc).date()
+    logging.info(f'[Service Uptime] starting', current_level=lvl)
     start:date = end - relativedelta(months=int(args.duration))
     start = start.replace(day=1)
 
@@ -61,8 +61,6 @@ def main():
                     'end': end_time.isoformat(),
                     'duration': dur}
 
-
-
     report_data:dict = reports(artifacts=artifacts,
                                token=github_token,
                                start=start,
@@ -72,6 +70,7 @@ def main():
                                )
     output_dir:str = './outputs/service_uptime/'
     writer(report_data=report_data, output_dir=output_dir)
+    logging.info(f'[Service Uptime] complete', duration=dur)
 
 if __name__ == "__main__":
     main()
