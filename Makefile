@@ -1,5 +1,6 @@
 .DEFAULT_GOAL: all
 all: requirements install
+.EXPORT_ALL_VARIABLES:
 
 requirements:
 ifeq (, $(shell which python))
