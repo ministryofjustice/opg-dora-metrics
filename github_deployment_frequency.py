@@ -45,7 +45,6 @@ def main() :
     args = parser.parse_args()
     exclude_archived:bool = not bool(args.include_archived)
     logging.info(f'[Deployment Frequency] starting', current_level=lvl, exclude_archived=exclude_archived)
-    os._exit(1)
     github_token = os.environ.get("GITHUB_ACCESS_TOKEN", None )
     g:Github = Github(github_token)
 
