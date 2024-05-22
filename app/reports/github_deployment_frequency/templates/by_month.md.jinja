@@ -12,18 +12,18 @@ Releases per month for all OPG owned repositories.
 <table class='dataframe'>
     <thead>
         <tr>
-            <th align='left'>Month</th>
-            <th align='right'>Total</th>
-            <th align='right'>Average per day</th>
+            <th style='text-align:left;'>Month</th>
+            <th style='text-align:right;padding:10px;'>Total</th>
+            <th style='text-align:right;padding:10px;'>Average per day</th>
         </tr>
     </thead>
     <tbody>
     {% for month, values in by_month.items() -%}
         {% set total, avger = values -%}
         <tr>
-            <th align='left'>{{ month }}</th>
-            <td align='right'>{{ total }}</td>
-            <td align='right'>{{ avger | round(2) }}</td>
+            <th style='text-align:left;'>{{ month }}</th>
+            <td style='text-align:right;padding:10px;'>{{ total }}</td>
+            <td style='text-align:right;padding:10px;'>{{ avger | round(2) }}</td>
         </tr>
     {% endfor %}
     </tbody>

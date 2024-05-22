@@ -12,9 +12,9 @@ Releases per month for each repository.
 <table class='dataframe'>
     <thead>
         <tr>
-            <th align='left'></th>
+            <th></th>
             {% for month in months -%}
-            <th align='right' colspan='2'>{{ month  }}</th>
+            <th style='text-align:right;padding:10px;' colspan='2'>{{ month  }}</th>
             {% endfor -%}
         </tr>
     </thead>
@@ -22,29 +22,29 @@ Releases per month for each repository.
         <tr>
             <td></td>
             {% for month in months -%}
-            <th title="Total for {{ month }}">T</th>
-            <th title="Average per weekday for {{ month }}">A</th>
+            <th title="Total for {{ month }}" style='text-align:right;padding:10px;'>T</th>
+            <th title="Average per weekday for {{ month }}" style='text-align:right;padding:10px;'>A</th>
             {% endfor -%}
         </tr>
     {% for repo, item in by_repo.items() -%}
         <tr>
-            <th align='left' valign="top">
+            <th style='text-align:left;' valign="top">
                 <a href='https://github.com/{{ repo }}'>{{ repo | replace("ministryofjustice/", "") }}</a>
             </th>
             {% for m in months -%}
             {% set total, avger = item.get(m) -%}
-            <td align='right' title="Total for {{ m }}">{{ total  }}</td>
-            <td align='right' title="Average per weekday for {{ m }}">{{ "%0.1f" | format( avger ) }}</td>
+            <td style='text-align:right;padding:10px;' title="Total for {{ m }}">{{ total  }}</td>
+            <td style='text-align:right;padding:10px;' title="Average per weekday for {{ m }}">{{ "%0.1f" | format( avger ) }}</td>
             {% endfor -%}
         </tr>
 
     {% endfor -%}
         <tr>
-            <th align='left' >OVERALL</th>
+            <th style='text-align:left;' >OVERALL</th>
             {% for m in months -%}
             {% set total, avger = totals.get(m) -%}
-            <td align='right' title="Total for {{ m }}" >{{ total  }}</td>
-            <td align='right' title="Average per day for {{ m }}">{{ "%0.1f" | format( avger ) }}</td>
+            <td style='text-align:right;padding:10px;' title="Total for {{ m }}" >{{ total  }}</td>
+            <td style='text-align:right;padding:10px;' title="Average per day for {{ m }}">{{ "%0.1f" | format( avger ) }}</td>
             {% endfor -%}
         </tr>
     </tbody>
