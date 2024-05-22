@@ -16,7 +16,7 @@ from app.reports.github_deployment_frequency.report import reports
 from app.logger import logging, lvl
 from app.decorator import TRACK_DURATIONS
 
-TRACK_DURATIONS['enabled'] = True
+# TRACK_DURATIONS['enabled'] = True
 
 def main() :
 
@@ -134,10 +134,10 @@ def main() :
 
     logging.info(f'[Deployment Frequency] completed in [{dur}].')
 
-    if TRACK_DURATIONS['enabled']:
-        tracked = sorted(TRACK_DURATIONS['data'], key=lambda i: i['duration'], reverse=True)
-        with open('times.json', 'w+') as f:
-            json.dump(tracked, f, sort_keys=True, indent=2, default=str)
+    # if TRACK_DURATIONS['enabled']:
+    #     tracked = sorted(TRACK_DURATIONS['data'], key=lambda i: i['duration'], reverse=True)
+    #     with open('times.json', 'w+') as f:
+    #         json.dump(tracked, f, sort_keys=True, indent=2, default=str)
 
 
 if __name__ == "__main__":
