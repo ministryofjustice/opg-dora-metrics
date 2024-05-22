@@ -66,8 +66,9 @@ github_repository_standards_by_org:
 .PHONY: github_deployment_frequency_by_org
 github_deployment_frequency_by_org:
 	@clear && env LOG_LEVEL=INFO env GITHUB_ACCESS_TOKEN="${GITHUB_TOKEN}" python ./github_deployment_frequency.py \
+		--no-exclude-archived \
 		--org-team="ministryofjustice:opg" \
-		--duration=2
+		--duration=6
 
 .PHONY: github_deployment_frequency_by_list
 github_deployment_frequency_by_list:
