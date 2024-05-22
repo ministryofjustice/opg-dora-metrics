@@ -1,5 +1,5 @@
 ---
-title: Releases per team, per month
+title: Releases per team, per month {{ report_time or '' }}
 last_reviewed_on: {{ now }}
 review_in: 3 months
 ---
@@ -9,20 +9,17 @@ Releases per month for each github team.
 
 *Published on {{ now }} in {{ duration }}*
 
+### Totals
+
 <table class='dataframe'>
     <thead>
         <tr>
-            <th style='text-align:left;' rowspan='2'></th>
+            <th style='text-align:left;'></th>
             {% for month in months -%}
-            <th style='text-align:right;padding:10px;' colspan='2'>{{ month  }}</th>
+            <th style='text-align:right;padding:10px;'>{{ month  }}</th>
             {% endfor -%}
         </tr>
-        <tr>
-            {% for month in months -%}
-            <th title="Total for {{ month }}" style='text-align:right;padding:10px;'>T</th>
-            <th title="Average per weekday for {{ month }}" style='text-align:right;padding:10px;'>A</th>
-            {% endfor -%}
-        </tr>
+
     </thead>
     <tbody>
     {% for team, item in by_team.items() -%}
@@ -31,6 +28,31 @@ Releases per month for each github team.
             {% for m in months -%}
             {% set total, avger = item.get(m) -%}
             <td title="Total for {{ m }}" style='text-align:right;padding:10px;'>{{ total  }}</td>
+            {% endfor -%}
+        </tr>
+    {% endfor -%}
+    </tr>
+    </tbody>
+</table>
+
+### Average per weekday
+
+<table class='dataframe'>
+    <thead>
+        <tr>
+            <th style='text-align:left;' ></th>
+            {% for month in months -%}
+            <th style='text-align:right;padding:10px;' >{{ month  }}</th>
+            {% endfor -%}
+        </tr>
+
+    </thead>
+    <tbody>
+    {% for team, item in by_team.items() -%}
+        <tr>
+            <th style='text-align:left;'>{{ team }}</th>
+            {% for m in months -%}
+            {% set total, avger = item.get(m) -%}
             <td title="Average per weekday for {{ m }}" style='text-align:right;padding:10px;'>{{ "%0.1f" | format(avger) }}</td>
             {% endfor -%}
         </tr>

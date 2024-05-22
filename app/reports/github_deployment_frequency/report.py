@@ -52,7 +52,8 @@ def deployments_per_team_per_month(deployments:list,
     return per_team_per_month
 
 
-def report_by_team_by_month(by_team:dict[str], duration:str, months:list[str]) -> str:
+def report_by_team_by_month(by_team:dict[str], duration:str,
+                            months:list[str],report_period:str=None) -> str:
     """"""
     loader:FileSystemLoader = FileSystemLoader(__template_directory__)
     env:Environment = Environment(loader=loader)
@@ -64,10 +65,12 @@ def report_by_team_by_month(by_team:dict[str], duration:str, months:list[str]) -
                                  duration=duration,
                                  by_team=by_team,
                                  months=months,
+                                 report_time=report_period,
                                  )
     return output
 
-def report_by_repo_by_month(by_month:dict[str], by_repo:dict[str], duration:str, months:list[str]) -> str:
+def report_by_repo_by_month(by_month:dict[str], by_repo:dict[str],
+                            duration:str, months:list[str], report_period:str=None) -> str:
     """"""
     loader:FileSystemLoader = FileSystemLoader(__template_directory__)
     env:Environment = Environment(loader=loader)
@@ -80,10 +83,12 @@ def report_by_repo_by_month(by_month:dict[str], by_repo:dict[str], duration:str,
                                  by_repo=by_repo,
                                  months=months,
                                  totals=by_month,
+                                 report_time=report_period,
                                  )
     return output
 
-def report_by_month(by_month:dict[str], duration:str, months:list[str]) -> str:
+def report_by_month(by_month:dict[str], duration:str,
+                    months:list[str]) -> str:
     """"""
     loader:FileSystemLoader = FileSystemLoader(__template_directory__)
     env:Environment = Environment(loader=loader)
@@ -152,7 +157,7 @@ def reports(repositories:list[dict],
     for ym in months:
         report_data[f'by_team/{ym}/index.html.md.erb'] = report_by_team_by_month(by_team=per_team_per_month,
                                                                 months=[ym],
-                                                                duration=duration)
+                                                                duration=duration, report_period=f'({ym})')
     # repos
     report_data['by_repository/index.html.md.erb'] = report_by_repo_by_month(by_repo=per_repo_per_month,
                                                                              by_month=per_month,
@@ -162,6 +167,6 @@ def reports(repositories:list[dict],
         report_data[f'by_repository/{ym}/index.html.md.erb'] = report_by_repo_by_month(by_repo=per_repo_per_month,
                                                                              by_month=per_month,
                                                                              months=[ym],
-                                                                             duration=duration)
+                                                                             duration=duration, report_period=f'({ym})')
 
     return report_data

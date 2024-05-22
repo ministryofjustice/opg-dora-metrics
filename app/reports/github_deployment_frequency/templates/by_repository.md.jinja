@@ -1,5 +1,5 @@
 ---
-title: Releases per repository, per month
+title: Releases per repository, per month {{ report_time or '' }}
 last_reviewed_on: {{ now }}
 review_in: 3 months
 ---
@@ -9,23 +9,19 @@ Releases per month for each repository.
 
 *Published on {{ now }} in {{ duration }}*
 
+### Totals
+
 <table class='dataframe'>
     <thead>
         <tr>
             <th></th>
             {% for month in months -%}
-            <th style='text-align:right;padding:10px;' colspan='2'>{{ month  }}</th>
+            <th style='text-align:right;padding:10px;'>{{ month  }}</th>
             {% endfor -%}
         </tr>
     </thead>
     <tbody>
-        <tr>
-            <td></td>
-            {% for month in months -%}
-            <th title="Total for {{ month }}" style='text-align:right;padding:10px;'>T</th>
-            <th title="Average per weekday for {{ month }}" style='text-align:right;padding:10px;'>A</th>
-            {% endfor -%}
-        </tr>
+
     {% for repo, item in by_repo.items() -%}
         <tr>
             <th style='text-align:left;' valign="top">
@@ -34,7 +30,6 @@ Releases per month for each repository.
             {% for m in months -%}
             {% set total, avger = item.get(m) -%}
             <td style='text-align:right;padding:10px;' title="Total for {{ m }}">{{ total  }}</td>
-            <td style='text-align:right;padding:10px;' title="Average per weekday for {{ m }}">{{ "%0.1f" | format( avger ) }}</td>
             {% endfor -%}
         </tr>
 
@@ -44,6 +39,40 @@ Releases per month for each repository.
             {% for m in months -%}
             {% set total, avger = totals.get(m) -%}
             <td style='text-align:right;padding:10px;' title="Total for {{ m }}" >{{ total  }}</td>
+            {% endfor -%}
+        </tr>
+    </tbody>
+</table>
+
+### Average per weekday
+
+<table class='dataframe'>
+    <thead>
+        <tr>
+            <th></th>
+            {% for month in months -%}
+            <th style='text-align:right;padding:10px;'>{{ month  }}</th>
+            {% endfor -%}
+        </tr>
+    </thead>
+    <tbody>
+
+    {% for repo, item in by_repo.items() -%}
+        <tr>
+            <th style='text-align:left;' valign="top">
+                <a href='https://github.com/{{ repo }}'>{{ repo | replace("ministryofjustice/", "") }}</a>
+            </th>
+            {% for m in months -%}
+            {% set total, avger = item.get(m) -%}
+            <td style='text-align:right;padding:10px;' title="Average per weekday for {{ m }}">{{ "%0.1f" | format( avger ) }}</td>
+            {% endfor -%}
+        </tr>
+
+    {% endfor -%}
+        <tr>
+            <th style='text-align:left;' >OVERALL</th>
+            {% for m in months -%}
+            {% set total, avger = totals.get(m) -%}
             <td style='text-align:right;padding:10px;' title="Average per day for {{ m }}">{{ "%0.1f" | format( avger ) }}</td>
             {% endfor -%}
         </tr>
