@@ -186,10 +186,11 @@ def reports(artifacts:list[dict],
     }
 
     # add a listing for the last month
-    data['by_month/index.html.md.erb'] = report_by_month(by_service_by_month=by_service_per_month,
+    data['index.html.md.erb'] = report_by_month(by_service_by_month=by_service_per_month,
                                                          months=months,
                                                          duration=duration,
                                                          firstdate=firstdate)
+    data['by_month/index.html.md.erb'] = data['index.html.md.erb']
     # now do each month so we have a historical record
     for ym in months:
         data[f'by_month/{ym}/index.html.md.erb'] = report_by_month(by_service_by_month=by_service_per_month,
