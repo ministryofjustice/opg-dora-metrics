@@ -21,7 +21,7 @@ from app.decorator import TRACK_DURATIONS
 def main() :
 
     parser = argparse.ArgumentParser(formatter_class=RawTextHelpFormatter)
-    parser.add_argument('--exclude-archived',
+    parser.add_argument('--include-archived',
                         help='Decide if we include archived repositories or not in the report',
                         default=True,
                         action=argparse.BooleanOptionalAction)
@@ -43,8 +43,9 @@ def main() :
                                help="Specify multiple repositories (<repo-full-name>)")
 
     args = parser.parse_args()
-    logging.info(f'[Deployment Frequency] starting', current_level=lvl)
-
+    exclude_archived:bool = not bool(args.include_archived)
+    logging.info(f'[Deployment Frequency] starting', current_level=lvl, exclude_archived=exclude_archived)
+    os._exit(1)
     github_token = os.environ.get("GITHUB_ACCESS_TOKEN", None )
     g:Github = Github(github_token)
 
@@ -57,11 +58,11 @@ def main() :
         repositories = repositories_for_org_and_team(g=g,
                                                      organisation_slug=org,
                                                      team_slug=team,
-                                                     exclude_archived=bool(args.exclude_archived))
+                                                     exclude_archived=exclude_archived)
     else:
         repositories = repositories_from_slugs(g=g,
                                                repository_slugs=list(args.repository),
-                                               exclude_archived=bool(args.exclude_archived))
+                                               exclude_archived=exclude_archived)
 
 
     end:date = datetime.now(timezone.utc).date()

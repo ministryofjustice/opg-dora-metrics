@@ -74,6 +74,6 @@ github_deployment_frequency_by_org:
 .PHONY: github_deployment_frequency_by_list
 github_deployment_frequency_by_list:
 	@clear && env LOG_LEVEL=INFO env GITHUB_ACCESS_TOKEN="${GITHUB_TOKEN}" python ./github_deployment_frequency.py \
-		--repo-branch-workflow='ministryofjustice/opg-digideps:main: live$$' \
-		--repo-branch-workflow='ministryofjustice/serve-opg:main: live$$' \
+		--repository='ministryofjustice/opg-digideps' \
+		--repository='ministryofjustice/opg-lpa-data-codes' \
 		--duration=2
